@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Inter Variable", Inter, sans-serif;
+  color: #3e3e3e;
+  background: #f6f6f6;
+  font-weight: 500;
+  --background: #f6f6f6;
+  --foreground: #3e3e3e;
+  --card: #ffffff;
+  --muted: #e5e5e4;
+  --muted-foreground: #505050;
+  --border: #d0d3d2;
+  --primary: #97caee;
+  --primary-foreground: #212121;
+  --primary-hover: #b0d7f2;
+  --ring: #3e3e3e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-ring: var(--ring);
+  --radius-sm: 3px;
+  --radius: 4px;
+  --radius-md: 6px;
+  --radius-lg: 15px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button,
+a,
+input,
+textarea,
+select {
+  outline-offset: 2px;
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  box-shadow: 0 0 0 4px var(--primary);
+}

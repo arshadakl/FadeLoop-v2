@@ -1,0 +1,12 @@
+#!/bin/sh
+branch=$(git symbolic-ref --short HEAD) || exit 1
+if [ "$branch" != dev ]; then
+  echo "Push rejected: work and push only on dev." >&2
+  exit 1
+fi
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$local_ref" != refs/heads/dev ] || [ "$remote_ref" != refs/heads/dev ]; then
+    echo "Push rejected: only refs/heads/dev to refs/heads/dev is allowed." >&2
+    exit 1
+  fi
+done

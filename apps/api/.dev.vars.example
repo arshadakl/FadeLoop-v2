@@ -1,0 +1,12 @@
+# Copy to .dev.vars locally. Never commit filled values.
+# Use the Instagram app credentials for the selected Instagram Login setup.
+META_APP_ID=<instagram-app-id>
+META_APP_SECRET=<instagram-app-secret>
+# Confirm the actual signing secret used for webhook POST signatures in your app setup.
+META_WEBHOOK_SIGNING_SECRET=<webhook-signing-secret>
+# Pinned from old FadeLoop; current provider support remains a P02 live check.
+META_GRAPH_VERSION=v23.0
+META_REDIRECT_URI=https://your-v2-test-domain.example/auth/callback
+META_WEBHOOK_VERIFY_TOKEN=<random-verification-token>
+# Generate 32 random bytes, base64url encoded; keep this stable and backed up securely.
+TOKEN_ENCRYPTION_KEY=<32-byte-base64url-key>

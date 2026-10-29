@@ -1,0 +1,13 @@
+{
+  "name": "@fadeloop/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "wrangler deploy --dry-run --env test --outdir dist"
+  },
+  "dependencies": {
+    "@fadeloop/worker-common": "workspace:*"
+  }
+}
