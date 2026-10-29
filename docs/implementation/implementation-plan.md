@@ -8,20 +8,21 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | Planning; application implementation has not started |
-| Current phase | P00: repository and planning baseline, in progress |
-| Completed artifacts | Architecture, frontend/Worker code standards, design reference, documentation organization, ignore rules, Git workflow, this tracker, and guardrails |
-| Application/runtime | No frontend scaffold, Worker implementation, migrations, or dependencies installed by this work |
-| Provider verification | Not performed; live Meta contracts and rate limits remain unverified |
-| Performance evidence | None; CPU/row budgets are targets |
-| Tests/builds/deployment | Not run / not created / not deployed |
-| Branch | Verified `dev`; based on existing remote README history without changing `main` |
-| Intended remote | `https://github.com/arshadakl/FadeLoop-v2.git` |
-| Remote/commit/push | Remote configuration and any commits/pushes have not been verified or completed by this work |
-| Active owner | Unassigned for implementation; this session prepares documentation |
-| Immediate next action | Restore command execution, inspect actual Git state, finish P00, then scaffold P01 |
-| Current blocker | Default sandbox startup fails; approved outside-sandbox command execution works. Meta credentials still needed for P02 live verification. |
-| Secrets/resources | No Cloudflare bindings, Meta credentials, or production resources provisioned by this work |
+| Product stage | P01 foundation implemented and locally verified; no Meta integration or live sending |
+| Current phase | P00 DONE; P01 local gates passed, commit/push pending |
+| Completed artifacts | Planning docs, pnpm workspace, React UI shell, independent Workers, shared schemas, tooling, CI, and local Git hooks |
+| Application/runtime | Health-only API, unavailable ingress, unbound disabled consumer; no D1 schema or provider implementation |
+| Provider verification | NOT_RUN; Meta contracts, rate limits, app/access/test account remain prerequisites for P02 |
+| Performance evidence | Cloudflare Free CPU and D1/Queue usage NOT_MEASURED; dry-run bundle sizes are not CPU evidence |
+| Tests/builds/deployment | pnpm check PASS; 6 tests; separate frontend/Worker builds PASS; browser smoke PASS; no deployment |
+| Branch | dev, based on remote README history without changing main |
+| Intended remote | https://github.com/arshadakl/FadeLoop-v2.git |
+| Remote/commit/push | Planning baseline bddada2 on origin/dev; P01 changes pending commit/push |
+| Active owner | Codex: completing P01 handoff |
+| Immediate next action | Commit/push verified P01; then begin P02 provider spike with a Meta test app/account |
+| Current blocker | Default sandbox startup fails; approved outside-sandbox execution works. Live provider verification requires app/account access. |
+| Secrets/resources | No credentials or cloud resources provisioned; APP_ENV is the only configured binding |
+| Evidence | [P01 verification](evidence/p01-foundation.md) |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
@@ -38,18 +39,18 @@ Allowed statuses: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`, 
 
 ## Phase overview
 
-| Phase | Outcome | Dependency | Status |
-|---|---|---|---|
-| P00 | Repository rules and reviewable plan | None | IN_PROGRESS |
-| P01 | Typed application and Worker foundations | P00 | NOT_STARTED |
-| P02 | Verified Meta integration contract | P01; test account/app access | NOT_STARTED |
-| P03 | Indexed data, authorization, delivery ownership | P01; relevant P02 identities | NOT_STARTED |
-| P04 | Authenticated webhook-to-Queue ingress | P01, P02 event fixtures | NOT_STARTED |
-| P05 | Direct campaign consumer with safe retries | P02, P03, P04 | NOT_STARTED |
-| P06 | Creator dashboard and campaign management | P03; P05 contracts | NOT_STARTED |
-| P07 | Failure, quota, concurrency, and performance proof | P04–P06 | NOT_STARTED |
-| P08 | Free-tier deployment and controlled live validation | P07; credentials/resources | NOT_STARTED |
-| P09 | Optional stateful campaign modes | Verified direct release | DEFERRED |
+| Phase | Outcome                                             | Dependency                   | Status      |
+| ----- | --------------------------------------------------- | ---------------------------- | ----------- |
+| P00   | Repository rules and reviewable plan                | None                         | DONE        |
+| P01   | Typed application and Worker foundations            | P00                          | IN_REVIEW |
+| P02   | Verified Meta integration contract                  | P01; test account/app access | NOT_STARTED |
+| P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | NOT_STARTED |
+| P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | NOT_STARTED |
+| P05   | Direct campaign consumer with safe retries          | P02, P03, P04                | NOT_STARTED |
+| P06   | Creator dashboard and campaign management           | P03; P05 contracts           | NOT_STARTED |
+| P07   | Failure, quota, concurrency, and performance proof  | P04–P06                      | NOT_STARTED |
+| P08   | Free-tier deployment and controlled live validation | P07; credentials/resources   | NOT_STARTED |
+| P09   | Optional stateful campaign modes                    | Verified direct release      | DEFERRED    |
 
 P02–P04 can progress independently where contracts are known. Never mark a dependent gate complete using assumptions from an unfinished prerequisite.
 
@@ -62,20 +63,20 @@ P02–P04 can progress independently where contracts are known. Never mark a dep
 - [x] P00-05: Create this tracker and permanent anti-patterns guide; distinguish verified limits from unknown Meta contracts.
 - [x] P00-06: Inspected Git status/refs; local research is ignored and untracked.
 - [x] P00-07: Configured authorized origin; remote contained only a README commit on main and no dev. Based local dev on that history without pushing main.
-- [ ] P00-08: Review intended files, create a Conventional Commit, push explicitly to `dev:dev`, and record the resulting SHA and remote status.
+- [x] P00-08: Reviewed baseline, committed as bddada2 (`docs: establish architecture and implementation baseline`), pushed explicitly to origin/dev. Research excluded.
 
 Exit gate: docs are internally linked, current Git state is known, and the reviewed baseline is on remote `dev`. Documentation creation alone does not complete P00.
 
 ## P01 — Foundations and tooling
 
-- [ ] P01-01: Scaffold pnpm workspace with web, API, ingress, consumer, contracts, domain, and narrowly imported Worker utilities as justified by actual code.
-- [ ] P01-02: Configure strict TypeScript, Biome, Vitest, Vite, and reproducible build commands with a committed lockfile.
-- [ ] P01-03: Add typed environment bindings, secret-free examples, separate local/test/production resource configuration, and runtime boundary checks.
-- [ ] P01-04: Establish browser-safe contracts, discriminated event/result unions, safe API errors, structured logging, and injectable clock/provider test seams.
-- [ ] P01-05: Add CI for appropriate lint/type/test/build checks, commit-message validation, and a local pre-push guard for `dev` only. CI checks commit ranges, not merely the latest commit title.
-- [ ] P01-06: Configure the UI token baseline, shadcn primitives, providers, router, and TanStack Query client without feature scaffolding bloat.
+- [x] P01-01: Scaffold pnpm workspace with web, API, ingress, consumer, contracts, domain, and narrowly imported Worker utilities as justified by actual code.
+- [x] P01-02: Configure strict TypeScript, Biome, Vitest, Vite, and reproducible build commands with a committed lockfile.
+- [x] P01-03: Add typed environment bindings, secret-free examples, separate local/test/production resource configuration, and runtime boundary checks.
+- [x] P01-04: Establish browser-safe contracts, discriminated event/result unions, safe API errors, structured logging, and injectable clock/provider test seams.
+- [x] P01-05: Add CI for appropriate lint/type/test/build checks, commit-message validation, and a local pre-push guard for `dev` only. CI checks commit ranges, not merely the latest commit title.
+- [x] P01-06: Configure the UI token baseline, shadcn primitives, providers, router, and TanStack Query client without feature scaffolding bloat.
 
-Exit gate: empty feature shells build cleanly; frontend cannot import Worker secrets/modules; Worker bundles remain separate. Record command output in the evidence log.
+Exit gate: empty feature shells build cleanly; frontend cannot import Worker secrets/modules; Worker bundles remain separate. Record command output in the evidence log. Local gates passed; see [P01 evidence](evidence/p01-foundation.md). Meta provider seams/credentials and real resource bindings are added in their owning phases, not fabricated here.
 
 ## P02 — Meta contract spike
 
@@ -167,10 +168,10 @@ Exit gate per mode: verified provider eligibility, idempotent transitions, acces
 
 ## Evidence log and task handoff template
 
-| Date | Task/gate | Result | Evidence | Revision/environment |
-|---|---|---|---|---|
+| Date       | Task/gate             | Result                 | Evidence                                                    | Revision/environment                |
+| ---------- | --------------------- | ---------------------- | ----------------------------------------------------------- | ----------------------------------- |
 | 2026-10-29 | P00-01 through P00-05 | Documentation prepared | Tracked-path artifacts linked above; runtime checks NOT_RUN | Local files; no verified remote SHA |
-| 2026-10-29 | P00-06 | BLOCKED | Process startup error: `setup refresh had errors` | Local shell unavailable |
+| 2026-10-29 | P00-06                | BLOCKED                | Process startup error: `setup refresh had errors`           | Local shell unavailable             |
 
 Append an entry when a task changes materially. Capture evidence in `docs/implementation/evidence/` when needed; do not fabricate output or include secrets.
 
@@ -188,3 +189,7 @@ Local commit / remote dev SHA / deployment SHA (separate):
 Migration level / flags / external side effects:
 Blocker / recovery or rollback notes:
 ```
+
+### Latest verification — 2026-10-29
+
+P00 baseline pushed as bddada2. P01 local checks and browser smoke pass; see the evidence note. The earlier process-startup blocker is bypassed with approved outside-sandbox commands, not fixed globally. No live sends, migrations, D1/Queue bindings, or deployments occurred.

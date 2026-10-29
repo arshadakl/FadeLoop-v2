@@ -1,6 +1,7 @@
 # FadeLoop V2 documentation
 
 - [Implementation plan and current handoff](implementation/implementation-plan.md) — phase/task status, evidence, blockers, and next steps
+- [Local development](implementation/local-development.md) — environment setup and disabled-runtime behavior
 - [Free-tier guardrails and anti-patterns](engineering/guardrails-and-anti-patterns.md) — permanent CPU, database, Queue, retry, and Meta rules
 
 - [Architecture and engineering standards](architecture/fadeloop-v2-architecture.md)

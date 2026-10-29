@@ -1,0 +1,17 @@
+{
+  "name": "@fadeloop/worker-common",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./environment": "./src/environment.ts",
+    "./http": "./src/http.ts",
+    "./logging": "./src/logging.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fadeloop/contracts": "workspace:*"
+  }
+}

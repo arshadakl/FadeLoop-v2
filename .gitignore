@@ -15,6 +15,7 @@ coverage/
 storybook-static/
 playwright-report/
 test-results/
+.artifacts/
 *.tsbuildinfo
 
 # Credentials and local environment overrides
