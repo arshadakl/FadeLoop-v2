@@ -32,3 +32,5 @@ The API dry-run is approximately 56 KiB (14 KiB gzip); a shared auth Zod Mini sc
 Live Supabase owner project/configuration, signup/recovery/MFA policy, production rate binding, target-plan CPU, and live browser cookies are not verified. Campaign/revision/delivery schema and atomic send ownership are not implemented. Retention cleanup and its write budget are not implemented. Credential refresh persistence needs its own concurrent-refresh fencing before the real Meta lifecycle is wired.
 
 Guardrails reviewed: CPU-01/05/06 (password hashing external, CPU claim withheld), DB-01/03/07/10 (indexed scoped queries, atomic state consume, no second queue), Q-02/10 (no send path enabled), META-06/07 (server-only encrypted credentials, no live account assumptions). Root `.env` values remain ignored and no filled credentials are part of this change.
+
+Source revision: 0a8145c5af4d421070c60b7dccec2ff308d6f97f, pushed to origin/dev. Remote GitHub Actions must be checked independently; all verification above was local.

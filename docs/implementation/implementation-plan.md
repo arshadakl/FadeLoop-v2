@@ -17,7 +17,7 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Performance evidence | Local indexed session/account queries each read 2 rows and write 0 with 1500 unrelated rows; live CPU/quotas NOT_MEASURED |
 | Tests/builds/deployment | pnpm check PASS, 35 tests; local workerd and mocked browser smoke PASS; no cloud deployment |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | P02 source b92b29b and handoff 71a0482 on origin/dev; P03 commit/push pending |
+| Remote/commit/push | P03 owner/storage source 0a8145c pushed to origin/dev; documentation-only handoff follows it |
 | Active owner | Codex: P03 owner/storage slice |
 | Immediate next action | Configure Supabase project/publishable key/confirmed owner UUID locally, provision owner workspace, and prove live sign-in. Then wire Meta OAuth and V2 callback; continue remaining P03 campaign/delivery schema and ownership. |
 | Current blockers | Default sandbox fails; approved execution works. Supabase configuration and live provider/CPU evidence are absent. |
@@ -219,3 +219,5 @@ P02 local preparation committed and pushed as b92b29bb4e2511a036744ae2ba88480b54
 ### P03 owner/storage slice — 2026-10-29
 
 Supabase email/password selected by owner. Local D1 migration and owner/session/account storage are implemented; 35 tests and builds pass. A browser smoke test used fake auth responses and real unauthenticated local API checks; live Supabase is not verified. Campaign/revision/delivery schema, send claims, cleanup, and production CPU remain open. See P03 evidence and owner setup.
+
+P03 owner/storage source committed and pushed as 0a8145c5af4d421070c60b7dccec2ff308d6f97f. Local tree was clean after push. Supabase live configuration and the remaining phase gates remain open; see P03 evidence.
