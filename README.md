@@ -2,7 +2,7 @@
 
 Event-driven Instagram comment-to-DM automation on Cloudflare Workers Free.
 
-**Current stage: P01 foundation. No Instagram connection or message delivery is implemented or enabled.** See the [live implementation tracker](docs/implementation/implementation-plan.md) for verified progress and next steps.
+**Current stage: P02 local Meta integration preparation; P01 foundation is complete. No Instagram connection or message delivery is enabled.** See the [live implementation tracker](docs/implementation/implementation-plan.md) for verified progress and next steps.
 
 ## Local development
 
@@ -34,3 +34,5 @@ This runs lint/boundary checks, TypeScript, tests, Vite production build, and se
 Worker configs separate local, test, and production names; public workers.dev/preview URLs are disabled. The ingress returns 503 for webhooks until authentication and durable enqueueing exist. The unbound consumer never sends or acknowledges work and must not be attached to a production queue during this phase.
 
 Work and push only on `dev`. Every commit follows Conventional Commits; install local hooks and keep CI enabled. Do not commit local research or credentials. See [AGENTS.md](AGENTS.md).
+
+For P02, see [local Meta setup](docs/integrations/meta-local-setup.md). `pnpm meta:check` validates configuration names/shape without contacting Meta or printing secrets; successful local validation is not a live integration check.

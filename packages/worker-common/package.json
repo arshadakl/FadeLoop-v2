@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./meta/config": "./src/meta/config.ts",
+    "./meta/oauth-client": "./src/meta/oauth-client.ts",
+    "./meta/signature": "./src/meta/signature.ts",
+    "./meta/oauth-state": "./src/meta/oauth-state.ts",
+    "./meta/token-vault": "./src/meta/token-vault.ts",
     "./environment": "./src/environment.ts",
     "./http": "./src/http.ts",
     "./logging": "./src/logging.ts"

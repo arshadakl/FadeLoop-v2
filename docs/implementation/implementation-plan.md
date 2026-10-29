@@ -8,21 +8,21 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01 foundation implemented and locally verified; no Meta integration or live sending |
-| Current phase | P00 DONE; P01 DONE; next phase P02 |
+| Product stage | P02 local security/configuration preparation verified; live Meta integration not yet verified |
+| Current phase | P00 DONE; P01 DONE; P02 IN_PROGRESS (live checks pending) |
 | Completed artifacts | Planning docs, pnpm workspace, React UI shell, independent Workers, shared schemas, tooling, CI, and local Git hooks |
-| Application/runtime | Health-only API, unavailable ingress, unbound disabled consumer; no D1 schema or provider implementation |
-| Provider verification | NOT_RUN; Meta contracts, rate limits, app/access/test account remain prerequisites for P02 |
+| Application/runtime | Health-only runtime unchanged; HMAC, token vault, OAuth state, mocked OAuth request layer, local Meta readiness command added; no D1 schema/provider calls |
+| Provider verification | App/test account readiness user-reported; credential variable names found in ignored .env; no provider calls or actual grant checks |
 | Performance evidence | Cloudflare Free CPU and D1/Queue usage NOT_MEASURED; dry-run bundle sizes are not CPU evidence |
-| Tests/builds/deployment | pnpm check PASS; 6 tests; separate frontend/Worker builds PASS; browser smoke PASS; no deployment |
+| Tests/builds/deployment | pnpm check PASS; 21 tests; separate builds PASS; previous P01 browser smoke PASS; no deployment |
 | Branch | dev, based on remote README history without changing main |
 | Intended remote | https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | Planning bddada2 and implementation 3750038 pushed to origin/dev; this handoff update follows in a docs commit |
-| Active owner | P01 completed by Codex; next implementation owner unassigned |
-| Immediate next action | Begin P02 provider spike: establish Meta app/test-account access, API version, permissions, and sanitized fixtures |
-| Current blocker | Default sandbox startup fails; approved outside-sandbox execution works. Live provider verification requires app/account access. |
-| Secrets/resources | No credentials or cloud resources provisioned; APP_ENV is the only configured binding |
-| Evidence | [P01 verification](evidence/p01-foundation.md) |
+| Remote/commit/push | P01 source 3750038 and handoff 717f3b4 on origin/dev; P02 preparation commit/push pending |
+| Active owner | Codex: P02 local preparation and handoff |
+| Immediate next action | Implement minimal P03 owner/state/token storage; obtain/register V2 callback URI, then live-verify the legacy v23.0 baseline and account grants |
+| Current blocker | Default sandbox startup still fails; approved execution works. V2 callback registration, live provider contract checks, and P03 persistence remain prerequisites; local preparation is verified. |
+| Secrets/resources | User credentials remain in ignored root .env; encryption key and legacy v23.0 pin appended privately. No credentials bound to Workers; no cloud resources provisioned |
+| Evidence | [P01 verification](evidence/p01-foundation.md), [P02 local preparation](evidence/p02-local-preparation.md) |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
@@ -43,7 +43,7 @@ Allowed statuses: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`, 
 | ----- | --------------------------------------------------- | ---------------------------- | ----------- |
 | P00   | Repository rules and reviewable plan                | None                         | DONE        |
 | P01   | Typed application and Worker foundations            | P00                          | DONE |
-| P02   | Verified Meta integration contract                  | P01; test account/app access | NOT_STARTED |
+| P02   | Verified Meta integration contract                  | P01; test account/app access | IN_PROGRESS |
 | P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | NOT_STARTED |
 | P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | NOT_STARTED |
 | P05   | Direct campaign consumer with safe retries          | P02, P03, P04                | NOT_STARTED |
@@ -79,6 +79,12 @@ Exit gate: docs are internally linked, current Git state is known, and the revie
 Exit gate: empty feature shells build cleanly; frontend cannot import Worker secrets/modules; Worker bundles remain separate. Record command output in the evidence log. Local gates passed; see [P01 evidence](evidence/p01-foundation.md). Meta provider seams/credentials and real resource bindings are added in their owning phases, not fabricated here.
 
 ## P02 — Meta contract spike
+
+Local preparation completed (these do not close the live gates below):
+
+- [x] P02-PREP-01: Server-only raw HMAC validation, account-bound token vault, session-bound OAuth-state helper, atomic-store interface, and mock-tested OAuth request layer.
+- [x] P02-PREP-02: Secret-safe aliases/readiness command and setup/contract docs; old source 4b7e49a inspected for paths, version, and signing mapping; existing secrets remain ignored.
+- [ ] P02-PREP-03: Obtain/register V2 callback URL and confirm provider support/grants; wire actual OAuth only after P03 owner-session/state/token storage exists.
 
 - [ ] P02-01: Pin supported API version/login path; document required scopes and access levels for owned test accounts versus external creators.
 - [ ] P02-02: Prove OAuth state verification, callback, account identity, encrypted token storage, token expiry/refresh, revocation, and reconnect behavior.
@@ -195,3 +201,7 @@ Blocker / recovery or rollback notes:
 P00 baseline pushed as bddada2. P01 local checks and browser smoke pass; see the evidence note. The earlier process-startup blocker is bypassed with approved outside-sandbox commands, not fixed globally. No live sends, migrations, D1/Queue bindings, or deployments occurred.
 
 P01 implementation was committed as 37500388063c83ff487eeefaa2d92da0189f148c and pushed to origin/dev. All source changes are locally verified. This final documentation update records completion; deployment remains NOT_RUN.
+
+### P02 preparation — 2026-10-29
+
+Local security/configuration helpers pass all 21 tests and the full build gate. Existing root .env aliases are recognized; a private encryption key was appended without changing user credentials. Legacy source pin v23.0 and signing mapping are recorded. Provider checks, exact rates, current version support, real signed fixtures, real token exchange/refresh, and messaging remain NOT_RUN. See P02 evidence and Meta contract register.

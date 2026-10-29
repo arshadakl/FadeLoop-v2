@@ -11,12 +11,13 @@
     "dev:api": "pnpm --filter @fadeloop/api dev",
     "lint": "biome check . && node scripts/check-boundaries.mjs",
     "format": "biome check --write .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "tsc -p tsconfig.tools.json && pnpm -r typecheck",
     "test": "vitest run",
     "build": "pnpm -r build",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "hooks:install": "git config core.hooksPath .githooks",
-    "commits:check": "node scripts/check-commits.mjs"
+    "commits:check": "node scripts/check-commits.mjs",
+    "meta:check": "node --experimental-strip-types --env-file-if-exists=.env --env-file-if-exists=apps/api/.dev.vars scripts/meta-readiness.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

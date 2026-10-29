@@ -2,6 +2,8 @@
 
 - [Implementation plan and current handoff](implementation/implementation-plan.md) — phase/task status, evidence, blockers, and next steps
 - [Local development](implementation/local-development.md) — environment setup and disabled-runtime behavior
+- [Meta contract register](integrations/meta-contract.md) — local proofs versus outstanding live checks
+- [Local Meta configuration](integrations/meta-local-setup.md) — secret-safe setup and readiness check
 - [Free-tier guardrails and anti-patterns](engineering/guardrails-and-anti-patterns.md) — permanent CPU, database, Queue, retry, and Meta rules
 
 - [Architecture and engineering standards](architecture/fadeloop-v2-architecture.md)
