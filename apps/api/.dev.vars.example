@@ -10,3 +10,9 @@ META_REDIRECT_URI=https://your-v2-test-domain.example/auth/callback
 META_WEBHOOK_VERIFY_TOKEN=<random-verification-token>
 # Generate 32 random bytes, base64url encoded; keep this stable and backed up securely.
 TOKEN_ENCRYPTION_KEY=<32-byte-base64url-key>
+
+# Provision the same owner UUID locally with pnpm owner:provision.
+# Never use a service_role or secret admin key here.
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=<publishable-or-legacy-anon-key>
+OWNER_SUPABASE_USER_ID=<confirmed-owner-user-uuid>

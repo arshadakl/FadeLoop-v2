@@ -15,6 +15,7 @@
   --primary-foreground: #212121;
   --primary-hover: #b0d7f2;
   --ring: #3e3e3e;
+  --destructive: #8f2017;
 }
 
 @theme inline {
@@ -28,6 +29,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
   --radius-sm: 3px;
   --radius: 4px;
   --radius-md: 6px;

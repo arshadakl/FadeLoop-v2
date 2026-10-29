@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 const FoundationPage = lazy(() => import("../pages/foundation-page"));
+const LoginPage = lazy(() => import("../pages/login-page"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 60_000, retry: false, refetchOnWindowFocus: false },
@@ -23,6 +24,7 @@ export function App() {
         >
           <Routes>
             <Route path="/" element={<FoundationPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route
               path="*"
               element={

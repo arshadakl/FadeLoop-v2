@@ -46,4 +46,4 @@ Bind token encryption context to the actual authorized workspace/account resolve
 
 ## Phase dependency clarification
 
-P02 live OAuth persistence depends on P03's minimal owner session, state-store, and credential-storage implementation. Build those prerequisites before wiring public connect/callback routes. A focused provider test harness may be used for controlled contract checks, but must not expose an unauthenticated production onboarding endpoint. No D1 task queue or scheduler is needed for OAuth.
+P02 live OAuth persistence depends on P03's minimal owner session, state-store, and credential-storage implementation. The local owner/session/state/credential implementation now exists. Live Supabase setup, V2 callback registration, and OAuth wiring remain pending before public connect/callback routes can be exposed. A focused provider test harness may be used for controlled contract checks, but must not expose an unauthenticated production onboarding endpoint. No D1 task queue or scheduler is needed for OAuth.

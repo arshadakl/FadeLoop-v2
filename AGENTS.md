@@ -14,6 +14,8 @@
 
 ## Implementation references
 
+- Owner sign-in uses Supabase Auth email/password (explicit user choice). Do not replace it with an owner access key or weaken password hashing to meet Worker CPU limits. See `docs/engineering/owner-authentication.md`; production CPU and live provider verification remain required.
+
 - Before implementation, read `docs/implementation/implementation-plan.md` and `docs/engineering/guardrails-and-anti-patterns.md`.
 - Keep the implementation tracker current in the same change as development: task status, owner, evidence, blockers, exact next action, and separate local/remote/deployed state. Do not mark untested or unverified work done.
 - Deploy on Cloudflare Workers Free. Target under 5 ms active CPU per invocation and stay below the 10 ms project ceiling for HTTP, Queue, and scheduled paths. Respect daily account-wide D1/Queue allowances; measure metered rows and retries, not just successful events or query counts.

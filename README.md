@@ -2,7 +2,7 @@
 
 Event-driven Instagram comment-to-DM automation on Cloudflare Workers Free.
 
-**Current stage: P02 local Meta integration preparation; P01 foundation is complete. No Instagram connection or message delivery is enabled.** See the [live implementation tracker](docs/implementation/implementation-plan.md) for verified progress and next steps.
+**Current stage: P03 owner authentication/storage slice; live Supabase and Meta verification are pending. No Instagram connection or message delivery is enabled.** See the [live implementation tracker](docs/implementation/implementation-plan.md) for verified progress and next steps.
 
 ## Local development
 
@@ -11,6 +11,7 @@ Requirements: Node 22.23 or newer and pnpm 10.34.6.
 ```sh
 pnpm install --frozen-lockfile
 pnpm hooks:install
+pnpm db:migrate
 pnpm dev:api
 ```
 
@@ -20,7 +21,7 @@ In another terminal, run `pnpm dev`. Open the Vite URL; `/api` is proxied to the
 pnpm check
 ```
 
-This runs lint/boundary checks, TypeScript, tests, Vite production build, and separate Wrangler dry-run builds. It does not deploy or provision resources. No D1/Queue bindings or Cron triggers exist yet; add them only in their planned phases after resource and provider verification.
+This runs lint/boundary checks, TypeScript, real local D1 integration tests, Vite production build, and separate Wrangler dry-run builds. It does not deploy. The API local-only config has D1 and a login rate binding; production bindings, queues, and Cron triggers remain absent.
 
 ## Repository map
 
@@ -31,7 +32,7 @@ This runs lint/boundary checks, TypeScript, tests, Vite production build, and se
 - `packages/worker-common`: narrowly exported server-only HTTP/logging helpers.
 - [Documentation](docs/README.md): architecture, design, permanent guardrails, and development handoff.
 
-Worker configs separate local, test, and production names; public workers.dev/preview URLs are disabled. The ingress returns 503 for webhooks until authentication and durable enqueueing exist. The unbound consumer never sends or acknowledges work and must not be attached to a production queue during this phase.
+Worker configs separate local, test, and production names; public workers.dev/preview URLs are disabled. The ingress returns 503 for webhooks until authentication and durable enqueueing exist. The unbound consumer never sends or acknowledges work and must not be attached to a production queue during this phase. Owner sign-in at `/login` requires [Supabase setup](docs/implementation/owner-auth-setup.md); missing auth configuration fails closed.
 
 Work and push only on `dev`. Every commit follows Conventional Commits; install local hooks and keep CI enabled. Do not commit local research or credentials. See [AGENTS.md](AGENTS.md).
 
