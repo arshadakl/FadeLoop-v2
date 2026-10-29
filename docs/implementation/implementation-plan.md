@@ -17,7 +17,7 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Tests/builds/deployment | pnpm check PASS; 21 tests; separate builds PASS; previous P01 browser smoke PASS; no deployment |
 | Branch | dev, based on remote README history without changing main |
 | Intended remote | https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | P01 source 3750038 and handoff 717f3b4 on origin/dev; P02 preparation commit/push pending |
+| Remote/commit/push | P02 source b92b29b pushed to origin/dev; this documentation-only handoff follows it |
 | Active owner | Codex: P02 local preparation and handoff |
 | Immediate next action | Implement minimal P03 owner/state/token storage; obtain/register V2 callback URI, then live-verify the legacy v23.0 baseline and account grants |
 | Current blocker | Default sandbox startup still fails; approved execution works. V2 callback registration, live provider contract checks, and P03 persistence remain prerequisites; local preparation is verified. |
@@ -205,3 +205,5 @@ P01 implementation was committed as 37500388063c83ff487eeefaa2d92da0189f148c and
 ### P02 preparation — 2026-10-29
 
 Local security/configuration helpers pass all 21 tests and the full build gate. Existing root .env aliases are recognized; a private encryption key was appended without changing user credentials. Legacy source pin v23.0 and signing mapping are recorded. Provider checks, exact rates, current version support, real signed fixtures, real token exchange/refresh, and messaging remain NOT_RUN. See P02 evidence and Meta contract register.
+
+P02 local preparation committed and pushed as b92b29bb4e2511a036744ae2ba88480b54365b87. All 21 project tests, type/lint checks, and dry-run builds passed. Local readiness now reports only META_REDIRECT_URI missing. P02 remains IN_PROGRESS until actual provider checks and required persistence are complete.
