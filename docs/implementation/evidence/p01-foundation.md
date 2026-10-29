@@ -36,3 +36,7 @@ Wrangler 4.155.0 test-environment dry-runs reported API/ingress about 1.24 KiB e
 P02 must verify Meta app/access, account identity, OAuth, webhook fixtures, messaging rules, and rate limits. Authentication, campaign CRUD, migrations, D1/Queue bindings, and delivery behavior have not started. UI currently shows development health only. React Hook Form and additional shadcn controls will be added when real forms need them. Test/production environment names exist, but no resources are provisioned.
 
 CI is defined locally; a passing local gate is not evidence that GitHub Actions has run successfully. Cloudflare deployment and resource usage remain unverified. Nothing was deployed by dry-run builds.
+
+Remote CI was observed running for implementation 3750038: [GitHub Actions run](https://github.com/arshadakl/FadeLoop-v2/actions/runs/40832605585). Completion was not yet verified at the time of this note; inspect the run before treating remote CI as passed.
+
+Implementation revision: `37500388063c83ff487eeefaa2d92da0189f148c`, pushed successfully to `origin/dev`. Git working tree was clean immediately after that push; subsequent changes only finalize this handoff.

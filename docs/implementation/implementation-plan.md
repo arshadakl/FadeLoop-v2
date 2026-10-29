@@ -9,7 +9,7 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Field | Current state |
 |---|---|
 | Product stage | P01 foundation implemented and locally verified; no Meta integration or live sending |
-| Current phase | P00 DONE; P01 local gates passed, commit/push pending |
+| Current phase | P00 DONE; P01 DONE; next phase P02 |
 | Completed artifacts | Planning docs, pnpm workspace, React UI shell, independent Workers, shared schemas, tooling, CI, and local Git hooks |
 | Application/runtime | Health-only API, unavailable ingress, unbound disabled consumer; no D1 schema or provider implementation |
 | Provider verification | NOT_RUN; Meta contracts, rate limits, app/access/test account remain prerequisites for P02 |
@@ -17,9 +17,9 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Tests/builds/deployment | pnpm check PASS; 6 tests; separate frontend/Worker builds PASS; browser smoke PASS; no deployment |
 | Branch | dev, based on remote README history without changing main |
 | Intended remote | https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | Planning baseline bddada2 on origin/dev; P01 changes pending commit/push |
-| Active owner | Codex: completing P01 handoff |
-| Immediate next action | Commit/push verified P01; then begin P02 provider spike with a Meta test app/account |
+| Remote/commit/push | Planning bddada2 and implementation 3750038 pushed to origin/dev; this handoff update follows in a docs commit |
+| Active owner | P01 completed by Codex; next implementation owner unassigned |
+| Immediate next action | Begin P02 provider spike: establish Meta app/test-account access, API version, permissions, and sanitized fixtures |
 | Current blocker | Default sandbox startup fails; approved outside-sandbox execution works. Live provider verification requires app/account access. |
 | Secrets/resources | No credentials or cloud resources provisioned; APP_ENV is the only configured binding |
 | Evidence | [P01 verification](evidence/p01-foundation.md) |
@@ -42,7 +42,7 @@ Allowed statuses: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`, 
 | Phase | Outcome                                             | Dependency                   | Status      |
 | ----- | --------------------------------------------------- | ---------------------------- | ----------- |
 | P00   | Repository rules and reviewable plan                | None                         | DONE        |
-| P01   | Typed application and Worker foundations            | P00                          | IN_REVIEW |
+| P01   | Typed application and Worker foundations            | P00                          | DONE |
 | P02   | Verified Meta integration contract                  | P01; test account/app access | NOT_STARTED |
 | P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | NOT_STARTED |
 | P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | NOT_STARTED |
@@ -72,7 +72,7 @@ Exit gate: docs are internally linked, current Git state is known, and the revie
 - [x] P01-01: Scaffold pnpm workspace with web, API, ingress, consumer, contracts, domain, and narrowly imported Worker utilities as justified by actual code.
 - [x] P01-02: Configure strict TypeScript, Biome, Vitest, Vite, and reproducible build commands with a committed lockfile.
 - [x] P01-03: Add typed environment bindings, secret-free examples, separate local/test/production resource configuration, and runtime boundary checks.
-- [x] P01-04: Establish browser-safe contracts, discriminated event/result unions, safe API errors, structured logging, and injectable clock/provider test seams.
+- [x] P01-04: Establish browser-safe contracts, discriminated event/result unions, safe API errors, structured logging, and an injectable clock seam; provider injection is added with the actual adapter in P02/P05.
 - [x] P01-05: Add CI for appropriate lint/type/test/build checks, commit-message validation, and a local pre-push guard for `dev` only. CI checks commit ranges, not merely the latest commit title.
 - [x] P01-06: Configure the UI token baseline, shadcn primitives, providers, router, and TanStack Query client without feature scaffolding bloat.
 
@@ -193,3 +193,5 @@ Blocker / recovery or rollback notes:
 ### Latest verification — 2026-10-29
 
 P00 baseline pushed as bddada2. P01 local checks and browser smoke pass; see the evidence note. The earlier process-startup blocker is bypassed with approved outside-sandbox commands, not fixed globally. No live sends, migrations, D1/Queue bindings, or deployments occurred.
+
+P01 implementation was committed as 37500388063c83ff487eeefaa2d92da0189f148c and pushed to origin/dev. All source changes are locally verified. This final documentation update records completion; deployment remains NOT_RUN.
