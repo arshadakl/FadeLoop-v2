@@ -6,7 +6,7 @@ const maximumTokenLength = 16_384;
 function associatedData(context: string): Uint8Array<ArrayBuffer> {
   if (!context || context.length > 1024)
     throw new Error("Token context is required");
-  return encoder.encode(`fadeloop:token:v1:${context}`);
+  return new Uint8Array(encoder.encode(`fadeloop:token:v1:${context}`));
 }
 
 export async function createTokenVault(encodedKey: string) {
@@ -41,9 +41,10 @@ export async function createTokenVault(encodedKey: string) {
           key,
           decodeBase64url(sealed),
         );
-        const token = new TextDecoder("utf-8", { fatal: true }).decode(
-          plaintext,
-        );
+        const token = new TextDecoder("utf-8", {
+          fatal: true,
+          ignoreBOM: false,
+        }).decode(plaintext);
         if (!token || token.length > maximumTokenLength)
           throw new Error("Invalid token size");
         return token;

@@ -8,21 +8,21 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P02 local security/configuration preparation verified; live Meta integration not yet verified |
-| Current phase | P00 DONE; P01 DONE; P02 IN_PROGRESS (live checks pending) |
-| Completed artifacts | Planning docs, pnpm workspace, React UI shell, independent Workers, shared schemas, tooling, CI, and local Git hooks |
-| Application/runtime | Health-only runtime unchanged; HMAC, token vault, OAuth state, mocked OAuth request layer, local Meta readiness command added; no D1 schema/provider calls |
-| Provider verification | App/test account readiness user-reported; credential variable names found in ignored .env; no provider calls or actual grant checks |
-| Performance evidence | Cloudflare Free CPU and D1/Queue usage NOT_MEASURED; dry-run bundle sizes are not CPU evidence |
-| Tests/builds/deployment | pnpm check PASS; 21 tests; separate builds PASS; previous P01 browser smoke PASS; no deployment |
-| Branch | dev, based on remote README history without changing main |
-| Intended remote | https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | P02 source b92b29b pushed to origin/dev; this documentation-only handoff follows it |
-| Active owner | Codex: P02 local preparation and handoff |
-| Immediate next action | Implement minimal P03 owner/state/token storage; obtain/register V2 callback URI, then live-verify the legacy v23.0 baseline and account grants |
-| Current blocker | Default sandbox startup still fails; approved execution works. V2 callback registration, live provider contract checks, and P03 persistence remain prerequisites; local preparation is verified. |
-| Secrets/resources | User credentials remain in ignored root .env; encryption key and legacy v23.0 pin appended privately. No credentials bound to Workers; no cloud resources provisioned |
-| Evidence | [P01 verification](evidence/p01-foundation.md), [P02 local preparation](evidence/p02-local-preparation.md) |
+| Product stage | P03 owner/session/storage slice locally verified; full P03 and live providers remain pending |
+| Current phase | P00/P01 DONE; P02 IN_PROGRESS; P03 IN_PROGRESS |
+| Authentication decision | User selected Supabase Auth email/password; no Worker password hashing or owner-key fallback |
+| Application/runtime | /login form, configured Supabase adapter, hashed cookie sessions/logout, atomic OAuth-state store, encrypted workspace-owned account storage and metadata API |
+| Provider verification | Supabase mocked in tests; no live Supabase/Meta calls or account grants verified |
+| Database | Migration 0001 applied to local D1 only. Test datasets are isolated Miniflare instances. No real owner provisioned. |
+| Performance evidence | Local indexed session/account queries each read 2 rows and write 0 with 1500 unrelated rows; live CPU/quotas NOT_MEASURED |
+| Tests/builds/deployment | pnpm check PASS, 35 tests; local workerd and mocked browser smoke PASS; no cloud deployment |
+| Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
+| Remote/commit/push | P03 owner/storage source 0a8145c pushed to origin/dev; documentation-only handoff follows it |
+| Active owner | Codex: P03 owner/storage slice |
+| Immediate next action | Configure Supabase project/publishable key/confirmed owner UUID locally, provision owner workspace, and prove live sign-in. Then wire Meta OAuth and V2 callback; continue remaining P03 campaign/delivery schema and ownership. |
+| Current blockers | Default sandbox fails; approved execution works. Supabase configuration and live provider/CPU evidence are absent. |
+| Secrets/resources | Existing Meta credentials untouched and ignored. No passwords/provider tokens stored in frontend or committed; no Supabase project or remote D1 provisioned. |
+| Evidence | [P03 local verification](evidence/p03-owner-storage.md), [owner setup](owner-auth-setup.md), earlier P01/P02 evidence retained below |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
@@ -44,7 +44,7 @@ Allowed statuses: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`, 
 | P00   | Repository rules and reviewable plan                | None                         | DONE        |
 | P01   | Typed application and Worker foundations            | P00                          | DONE |
 | P02   | Verified Meta integration contract                  | P01; test account/app access | IN_PROGRESS |
-| P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | NOT_STARTED |
+| P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | IN_PROGRESS |
 | P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | NOT_STARTED |
 | P05   | Direct campaign consumer with safe retries          | P02, P03, P04                | NOT_STARTED |
 | P06   | Creator dashboard and campaign management           | P03; P05 contracts           | NOT_STARTED |
@@ -96,6 +96,14 @@ Local preparation completed (these do not close the live gates below):
 Exit gate: checked-in sanitized contract fixtures and a provider-contract note with sources, version, dates, observed results, and remaining uncertainties. No guessed throughput limit is accepted as verified. Follow gating stays out of the direct MVP.
 
 ## P03 — Data and access boundaries
+
+Verified owner-storage subset (does not close the full phase gates below):
+
+- [x] P03-OWNER-01: Local migration for workspaces, hashed sessions, OAuth states, encrypted accounts and supporting indexes; local-only provisioning command.
+- [x] P03-OWNER-02: Supabase password adapter, confirmed owner allowlist, one-hour cookie session, exact-Origin mutation checks, native login rate gate, protected metadata and logout.
+- [x] P03-OWNER-03: Atomic D1 OAuth consumption, cross-workspace negative tests, indexed-query metadata on 1500-row fixtures, and mocked UI flow.
+- [ ] P03-OWNER-04: Configure and verify real Supabase sign-in/cookies, target-plan CPU, production bindings/revocation/recovery, and retention budgets.
+
 
 - [ ] P03-01: Define minimal workspace/account/campaign revision/delivery schema and versioned migrations. Enforce one published campaign per account/media in the MVP.
 - [ ] P03-02: Implement owner sessions, CSRF protection where needed, workspace authorization, and cross-account negative tests. Profile authentication CPU separately.
@@ -207,3 +215,9 @@ P01 implementation was committed as 37500388063c83ff487eeefaa2d92da0189f148c and
 Local security/configuration helpers pass all 21 tests and the full build gate. Existing root .env aliases are recognized; a private encryption key was appended without changing user credentials. Legacy source pin v23.0 and signing mapping are recorded. Provider checks, exact rates, current version support, real signed fixtures, real token exchange/refresh, and messaging remain NOT_RUN. See P02 evidence and Meta contract register.
 
 P02 local preparation committed and pushed as b92b29bb4e2511a036744ae2ba88480b54365b87. All 21 project tests, type/lint checks, and dry-run builds passed. Local readiness now reports only META_REDIRECT_URI missing. P02 remains IN_PROGRESS until actual provider checks and required persistence are complete.
+
+### P03 owner/storage slice — 2026-10-29
+
+Supabase email/password selected by owner. Local D1 migration and owner/session/account storage are implemented; 35 tests and builds pass. A browser smoke test used fake auth responses and real unauthenticated local API checks; live Supabase is not verified. Campaign/revision/delivery schema, send claims, cleanup, and production CPU remain open. See P03 evidence and owner setup.
+
+P03 owner/storage source committed and pushed as 0a8145c5af4d421070c60b7dccec2ff308d6f97f. Local tree was clean after push. Supabase live configuration and the remaining phase gates remain open; see P03 evidence.

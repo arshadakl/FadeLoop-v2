@@ -1,8 +1,8 @@
 # Local foundation
 
-Use the root README commands. Worker APP_ENV is configured separately in each Wrangler environment; required configuration is checked at runtime. No credentials are needed for the current health-only runtime. Real D1/Queue/Meta bindings and secrets are deliberately absent until their implementation phases; do not add placeholder production IDs.
+Use the root README commands. API local development uses wrangler.local.jsonc with local D1 and a native login rate binding. Run pnpm db:migrate first. No remote resource IDs or credentials are invented. See [owner auth setup](owner-auth-setup.md) for Supabase configuration.
 
-Worker entry points expose health only and return 503 elsewhere. The consumer has no configured queue. Its fallback retries unexpected work without acknowledgment; this is not a production retry implementation and must be replaced in P05 before attaching real workloads.
+The API exposes owner login/session/logout and protected account metadata. Missing provider configuration fails closed; Meta connect/send routes remain disabled. Ingress still rejects webhooks. The consumer has no configured queue. Its fallback retries unexpected work without acknowledgment; this is not a production retry implementation and must be replaced in P05 before attaching real workloads.
 
 Local `pnpm build` uses explicit test-environment Wrangler dry-runs and does not deploy. A successful build measures neither Cloudflare Free CPU nor provider behavior. Live performance remains a P07/P08 gate.
 

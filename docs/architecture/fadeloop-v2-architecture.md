@@ -215,6 +215,7 @@ These are agreed planning choices. Adapt useful patterns from the supplied X-Cli
 | Styling | Tailwind CSS with centralized semantic CSS tokens |
 | UI | shadcn/ui primitives, customized through shared components and tokens |
 | Server state | TanStack Query |
+| Owner authentication | Supabase Auth email/password with revocable HttpOnly D1 sessions; see [authentication decision](../engineering/owner-authentication.md) |
 | Forms | React Hook Form + Zod for form validation |
 | UI state | Local React state; Context only for genuinely shared client state |
 | Navigation state | URL parameters for shareable filters, search, and pagination |

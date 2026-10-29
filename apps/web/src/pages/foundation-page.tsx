@@ -1,9 +1,12 @@
 import { healthSchema } from "@fadeloop/contracts/health";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { getJSON } from "../api/client";
 import { Button } from "../components/ui/button";
+import { useOwner } from "../features/auth/hooks/use-owner";
 
 export default function FoundationPage() {
+  const { session, logout } = useOwner();
   const health = useQuery({
     queryKey: ["system", "health"],
     queryFn: async ({ signal }) =>
@@ -11,17 +14,34 @@ export default function FoundationPage() {
   });
   return (
     <main className="mx-auto flex min-h-dvh max-w-5xl flex-col px-6 py-8 md:px-10 md:py-12">
+      {logout.isError && (
+        <p role="alert" className="mb-4 text-destructive">
+          Sign-out failed. Please try again.
+        </p>
+      )}
       <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
         <a href="/" className="text-lg font-bold">
           FadeLoop<span className="text-muted-foreground"> / workspace</span>
         </a>
-        <span className="rounded bg-muted px-3 py-1 text-sm">Development</span>
+        {session.data ? (
+          <Button
+            variant="outline"
+            onClick={() => logout.mutate()}
+            disabled={logout.isPending}
+          >
+            Sign out
+          </Button>
+        ) : (
+          <Button asChild variant="outline">
+            <Link to="/login">Sign in</Link>
+          </Button>
+        )}
       </header>
       <section
         className="max-w-2xl py-12 md:py-20"
         aria-labelledby="welcome-title"
       >
-        <p className="mb-4 text-sm text-muted-foreground">FOUNDATION / P01</p>
+        <p className="mb-4 text-sm text-muted-foreground">WORKSPACE / P03</p>
         <h1
           id="welcome-title"
           className="text-balance text-3xl font-bold md:text-4xl"
