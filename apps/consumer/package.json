@@ -8,6 +8,8 @@
     "build": "wrangler deploy --dry-run --env test --outdir dist"
   },
   "dependencies": {
+    "@fadeloop/contracts": "workspace:*",
+    "@fadeloop/domain": "workspace:*",
     "@fadeloop/worker-common": "workspace:*"
   }
 }

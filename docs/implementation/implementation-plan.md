@@ -126,11 +126,11 @@ Exit gate: verified event acceptance, safe retries after publication failure, an
 
 ## P05 — Direct delivery
 
-- [ ] P05-01: Implement pure deterministic matching and one winning campaign revision for a valid comment.
-- [ ] P05-02: Execute the atomic delivery lifecycle; recheck account/campaign eligibility and event age immediately before sending.
-- [ ] P05-03: Add one Meta adapter and one business retry owner. Use bounded delayed retries with jitter; reject permanent/expired work and preserve ambiguous send outcomes.
+- [x] P05-01: Implement pure deterministic matching and one winning campaign revision for a valid comment. (packages/domain/src/matching.ts + findActiveCampaignForMedia).
+- [x] P05-02: Execute the atomic delivery lifecycle; recheck account/campaign eligibility and event age immediately before sending. (apps/consumer/src/processor.ts with claimDelivery).
+- [x] P05-03: Add one Meta adapter and one business retry owner. Use bounded delayed retries with jitter; reject permanent/expired work and preserve ambiguous send outcomes. (sendInstagramPrivateReply + exponential backoff + unknown classification).
 - [ ] P05-04: Add account/operation scoped atomic rate reservation and cooldown behavior using verified P02 rules. Do not assume consumer batch size serializes an account.
-- [ ] P05-05: Persist the final result before acknowledging. On Meta acceptance followed by D1 failure, prevent blind resend on redelivery.
+- [x] P05-05: Persist the final result before acknowledging. On Meta acceptance followed by D1 failure, prevent blind resend on redelivery. (recordOutcome in D1 before message.ack()).
 - [ ] P05-06: Add optional public acknowledgment with a separate action key, only after direct delivery correctness is proven. Profile whether a durable separate action is needed rather than chaining unbounded work.
 - [ ] P05-07: Add failure activity, poison-message handling, DLQ alert/recovery, and bounded eligibility-checked replay.
 

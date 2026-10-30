@@ -8,6 +8,8 @@
     "./meta/signature": "./src/meta/signature.ts",
     "./meta/oauth-state": "./src/meta/oauth-state.ts",
     "./meta/token-vault": "./src/meta/token-vault.ts",
+    "./meta/private-reply-client": "./src/meta/private-reply-client.ts",
+    "./database": "./src/database.ts",
     "./environment": "./src/environment.ts",
     "./http": "./src/http.ts",
     "./logging": "./src/logging.ts"
