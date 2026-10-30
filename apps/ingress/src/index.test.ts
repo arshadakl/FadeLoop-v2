@@ -143,6 +143,42 @@ describe("Webhook Ingress Worker", () => {
     });
   });
 
+  it("filters out self-comments posted by the account itself", async () => {
+    const payload = JSON.stringify({
+      object: "instagram",
+      entry: [
+        {
+          id: "ig_account_1",
+          changes: [
+            {
+              field: "comments",
+              value: {
+                id: "comment_self",
+                text: "Thanks for checking it out!",
+                media: { id: "media_456" },
+                from: { id: "ig_account_1" }, // Self comment!
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const sig = await signPayload(payload, secret);
+    const res = await ingress.fetch(
+      new Request("https://ingress.test/webhook", {
+        method: "POST",
+        headers: { "x-hub-signature-256": sig },
+        body: payload,
+      }),
+      env,
+    );
+
+    expect(res.status).toBe(200);
+    // Queue sendBatch should not be called because the event was filtered
+    expect(mockQueue.sendBatch).not.toHaveBeenCalled();
+  });
+
   it("returns 503 if Queue publication fails so Meta will retry", async () => {
     const failingQueue = {
       sendBatch: vi.fn(async () => {
