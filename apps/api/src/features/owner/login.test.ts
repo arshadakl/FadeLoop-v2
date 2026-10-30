@@ -177,7 +177,7 @@ describe("Supabase-backed owner sign-in", () => {
     expect(failed.status).toBe(503);
     expect(await failed.text()).not.toContain("secret-url");
   });
-  it("rejects ambiguous duplicate session cookies", () => {
+  it("rejects ambiguous duplicate session cookies and accepts local non-secure cookie", () => {
     const value = "a".repeat(43);
     expect(
       readSessionToken(
@@ -188,6 +188,29 @@ describe("Supabase-backed owner sign-in", () => {
         }),
       ),
     ).toBeNull();
-    expect(sessionCookie(value, 60)).toContain("Max-Age=60");
+    expect(
+      readSessionToken(
+        new Request("https://v2.test", {
+          headers: {
+            cookie: `__Host-fadeloop-session=${value}; fadeloop-session=${value}`,
+          },
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      readSessionToken(
+        new Request("http://127.0.0.1:5173", {
+          headers: {
+            cookie: `fadeloop-session=${value}`,
+          },
+        }),
+      ),
+    ).toBe(value);
+    expect(sessionCookie(value, 60, true)).toContain(
+      "__Host-fadeloop-session=",
+    );
+    expect(sessionCookie(value, 60, true)).toContain("Secure");
+    expect(sessionCookie(value, 60, false)).toContain("fadeloop-session=");
+    expect(sessionCookie(value, 60, false)).not.toContain("Secure");
   });
 });

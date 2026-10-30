@@ -26,10 +26,11 @@ export async function handleOwnerSession(
     );
   if (request.method === "DELETE") {
     await createOwnerStore(db).revokeSession(session.sessionDigest);
+    const isSecure = new URL(appOrigin).protocol === "https:";
     return new Response(null, {
       status: 204,
       headers: {
-        "set-cookie": clearSessionCookie(),
+        "set-cookie": clearSessionCookie(isSecure),
         "cache-control": "no-store",
       },
     });

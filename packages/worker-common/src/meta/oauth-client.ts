@@ -112,7 +112,7 @@ export function createInstagramOAuthClient(
     try {
       response = await fetcher(url.toString(), {
         ...init,
-        redirect: "error",
+        redirect: "manual",
         signal: AbortSignal.timeout(10_000),
       });
     } catch {

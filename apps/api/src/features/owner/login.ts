@@ -62,11 +62,12 @@ export async function handleOwnerLogin(
       now: input.now,
       expiresAt,
     });
+    const isSecure = new URL(input.appOrigin).protocol === "https:";
     return Response.json(
       { workspaceId: row.id, expiresAt },
       {
         headers: {
-          "set-cookie": sessionCookie(token, sessionLifetimeSeconds),
+          "set-cookie": sessionCookie(token, sessionLifetimeSeconds, isSecure),
           "cache-control": "no-store",
         },
       },

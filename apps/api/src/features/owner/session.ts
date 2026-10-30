@@ -1,7 +1,8 @@
 import type { OwnerSession } from "./storage";
 import { createOwnerStore } from "./storage";
 
-const cookieName = "__Host-fadeloop-session";
+const prodCookieName = "__Host-fadeloop-session";
+const localCookieName = "fadeloop-session";
 const tokenPattern = /^[A-Za-z0-9_-]{43}$/;
 
 export async function sessionDigest(token: string): Promise<string> {
@@ -15,12 +16,22 @@ export async function sessionDigest(token: string): Promise<string> {
 }
 
 export function readSessionToken(request: Request): string | null {
-  const values = (request.headers.get("cookie") ?? "")
+  const pairs = (request.headers.get("cookie") ?? "")
     .split(";")
     .map((value) => value.trim())
-    .filter((value) => value.startsWith(`${cookieName}=`));
-  if (values.length !== 1) return null;
-  const token = values[0]?.slice(cookieName.length + 1) ?? "";
+    .filter(Boolean);
+  const matched = pairs.filter(
+    (pair) =>
+      pair.startsWith(`${prodCookieName}=`) ||
+      pair.startsWith(`${localCookieName}=`),
+  );
+  if (matched.length !== 1) return null;
+  const target = matched[0];
+  if (!target) return null;
+  const prefix = target.startsWith(`${prodCookieName}=`)
+    ? `${prodCookieName}=`
+    : `${localCookieName}=`;
+  const token = target.slice(prefix.length);
   return tokenPattern.test(token) ? token : null;
 }
 
@@ -51,16 +62,24 @@ export function hasTrustedOrigin(request: Request, appOrigin: string): boolean {
   }
 }
 
-export function sessionCookie(token: string, maxAgeSeconds: number): string {
+export function sessionCookie(
+  token: string,
+  maxAgeSeconds: number,
+  isSecure = true,
+): string {
   if (
     !tokenPattern.test(token) ||
     !Number.isSafeInteger(maxAgeSeconds) ||
     maxAgeSeconds < 0
   )
     throw new Error("Invalid session cookie");
-  return `${cookieName}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+  const name = isSecure ? prodCookieName : localCookieName;
+  const secureFlag = isSecure ? "; Secure" : "";
+  return `${name}=${token}; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
 }
 
-export function clearSessionCookie(): string {
-  return `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+export function clearSessionCookie(isSecure = true): string {
+  const name = isSecure ? prodCookieName : localCookieName;
+  const secureFlag = isSecure ? "; Secure" : "";
+  return `${name}=; Path=/; HttpOnly${secureFlag}; SameSite=Lax; Max-Age=0`;
 }

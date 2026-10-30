@@ -32,7 +32,7 @@ export async function verifySupabasePassword(
       `${config.url}/auth/v1/token?grant_type=password`,
       {
         method: "POST",
-        redirect: "error",
+        redirect: "manual",
         signal: AbortSignal.timeout(10_000),
         headers: {
           apikey: config.publishableKey,

@@ -47,8 +47,8 @@ export default {
           limiter: env.LOGIN_RATE_LIMITER,
           now: Date.now(),
         });
-      } catch {
-        console.error("Owner login unavailable");
+      } catch (err) {
+        console.error("Owner login error:", err);
         return unavailable();
       }
     }
