@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./auth": "./src/auth.ts",
+    "./campaign": "./src/campaign.ts",
     "./events": "./src/events.ts",
     "./health": "./src/health.ts"
   },

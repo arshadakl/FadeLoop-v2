@@ -31,7 +31,7 @@ describe("Instagram Login request contract from legacy reference", () => {
     const call = fetcher.mock.calls[0];
     expect(call?.[0]).toBe("https://api.instagram.com/oauth/access_token");
     expect(call?.[1]?.method).toBe("POST");
-    expect(call?.[1]?.redirect).toBe("error");
+    expect(call?.[1]?.redirect).toBe("manual");
     expect(call?.[1]?.body).toBeInstanceOf(URLSearchParams);
     expect(String(call?.[1]?.body)).toContain(
       "redirect_uri=https%3A%2F%2Fv2.example%2Fauth%2Fcallback",

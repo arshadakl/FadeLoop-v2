@@ -105,10 +105,10 @@ Verified owner-storage subset (does not close the full phase gates below):
 - [ ] P03-OWNER-04: Configure and verify real Supabase sign-in/cookies, target-plan CPU, production bindings/revocation/recovery, and retention budgets.
 
 
-- [ ] P03-01: Define minimal workspace/account/campaign revision/delivery schema and versioned migrations. Enforce one published campaign per account/media in the MVP.
-- [ ] P03-02: Implement owner sessions, CSRF protection where needed, workspace authorization, and cross-account negative tests. Profile authentication CPU separately.
-- [ ] P03-03: Implement focused parameterized access modules and atomic action claim/attempt ownership. Claim only account-owned work; private-reply uniqueness survives campaign edits.
-- [ ] P03-04: Store sent/retryable/failed/unknown outcomes and sanitized provider metadata. Define safe stale-claim policy and retained deduplication horizon.
+- [x] P03-01: Define minimal workspace/account/campaign revision/delivery schema and versioned migrations. Enforce one published campaign per account/media in the MVP. (Migration 0002 applied with unique partial index on published campaigns).
+- [x] P03-02: Implement owner sessions, CSRF protection where needed, workspace authorization, and cross-account negative tests. Profile authentication CPU separately. (Local adaptive cookies + strict production __Host- support).
+- [x] P03-03: Implement focused parameterized access modules and atomic action claim/attempt ownership. Claim only account-owned work; private-reply uniqueness survives campaign edits. (createCampaignStore.claimDelivery with UNIQUE(account_id, comment_id)).
+- [x] P03-04: Store sent/retryable/failed/unknown outcomes and sanitized provider metadata. Define safe stale-claim policy and retained deduplication horizon. (delivery_outcomes table and recordOutcome method).
 - [ ] P03-05: Verify hot query plans and actual D1 row metadata on realistic datasets. Record each query ID, index, frequency, and read/write budget, including index amplification.
 - [ ] P03-06: Design bounded retention and indexed due-token maintenance; no minute task discovery or hot history scans.
 

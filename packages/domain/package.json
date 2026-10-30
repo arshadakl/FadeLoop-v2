@@ -3,10 +3,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./delivery": "./src/delivery.ts"
+    "./delivery": "./src/delivery.ts",
+    "./matching": "./src/matching.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fadeloop/contracts": "workspace:*"
   }
 }
