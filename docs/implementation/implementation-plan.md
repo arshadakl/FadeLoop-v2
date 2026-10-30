@@ -116,10 +116,10 @@ Exit gate: scoped access is demonstrated; concurrent claims have one owner; hot 
 
 ## P04 — Minimal ingress
 
-- [ ] P04-01: Implement challenge verification and bounded raw-body HMAC validation before D1 or business processing.
-- [ ] P04-02: Normalize all supported entries with deterministic event identities; ignore echoes/unsupported notifications intentionally.
-- [ ] P04-03: Await Queue publication before HTTP success, handle partial publication safely, and bound event count, payload size, and batch chunks.
-- [ ] P04-04: Configure push-based consumer batch size one initially, finite retries, DLQ, and observable queue errors. Ensure invalid signatures cause no D1 or Queue activity.
+- [x] P04-01: Implement challenge verification and bounded raw-body HMAC validation before D1 or business processing. (apps/ingress GET challenge + POST SHA-256 HMAC check).
+- [x] P04-02: Normalize all supported entries with deterministic event identities; ignore echoes/unsupported notifications intentionally. (apps/ingress/src/normalize.ts with deterministic comment/message keys).
+- [x] P04-03: Await Queue publication before HTTP success, handle partial publication safely, and bound event count, payload size, and batch chunks. (64 KB ceiling, await sendBatch before 200 OK, 503 on Queue error).
+- [x] P04-04: Configure push-based consumer batch size one initially, finite retries, DLQ, and observable queue errors. Ensure invalid signatures cause no D1 or Queue activity.
 - [ ] P04-05: Profile representative and maximum-supported envelopes on the intended Free deployment. Record CPU separately from wall latency.
 
 Exit gate: verified event acceptance, safe retries after publication failure, and ingress CPU evidence. Oversized legitimate payload handling is documented; dropping them silently is unacceptable.

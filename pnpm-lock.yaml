@@ -53,6 +53,9 @@ importers:
 
   apps/ingress:
     dependencies:
+      '@fadeloop/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@fadeloop/worker-common':
         specifier: workspace:*
         version: link:../../packages/worker-common
