@@ -106,19 +106,22 @@ export async function processQueueMessage(
 
   // 7. Atomic claim in D1: guarantees only 1 delivery per (account_id, comment_id)
   const actionKey = `${event.accountId}:${event.commentId}`;
-  const claimed = await store.claimDelivery({
-    actionKey,
-    workspaceId: active.campaign.workspaceId,
-    accountId: event.accountId,
-    commentId: event.commentId,
-    mediaId: event.mediaId,
-    campaignId: active.campaign.id,
-    revisionId: active.revision.id,
-    claimedAt: now,
-  });
+  const claimResult = await store.claimDelivery(
+    {
+      actionKey,
+      workspaceId: active.campaign.workspaceId,
+      accountId: event.accountId,
+      commentId: event.commentId,
+      mediaId: event.mediaId,
+      campaignId: active.campaign.id,
+      revisionId: active.revision.id,
+      claimedAt: now,
+    },
+    message.attempts,
+  );
 
-  if (!claimed) {
-    // Already claimed by a concurrent or prior worker
+  if (claimResult.status === "already_settled") {
+    // Already claimed or settled by another concurrent or prior worker
     message.ack();
     return;
   }

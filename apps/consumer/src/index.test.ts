@@ -296,6 +296,47 @@ describe("Consumer Queue message processing", () => {
     expect(retry).toHaveBeenCalledWith({ delaySeconds: 45 });
   });
 
+  it("successfully delivers on redelivery (attempts > 1) after prior retryable attempt", async () => {
+    // Redeliver c_ratelimit with attempts = 2
+    const event: AutomationEvent = {
+      schemaVersion: 1,
+      kind: "comment.created",
+      accountId: "ig_acc_consumer",
+      providerEventKey: "comment:c_ratelimit",
+      mediaId: "media_reel_100",
+      commentId: "c_ratelimit",
+      text: "guide please",
+      occurredAt: now,
+      receivedAt: now,
+    };
+
+    const mockFetcher = vi.fn(async () =>
+      Response.json({ message_id: "meta_msg_retried" }),
+    );
+
+    const { message, ack, retry } = createMockMessage(event, 2);
+    await processQueueMessage(
+      message,
+      { ...env, DB: db },
+      mockFetcher,
+      now + 5000,
+    );
+
+    // Meta API MUST be called on the redelivery attempt
+    expect(mockFetcher).toHaveBeenCalledTimes(1);
+    expect(ack).toHaveBeenCalledTimes(1);
+    expect(retry).not.toHaveBeenCalled();
+
+    const outcome = await db
+      .prepare(
+        "SELECT * FROM delivery_outcomes WHERE action_key = ? ORDER BY occurred_at DESC, attempt_count DESC LIMIT 1",
+      )
+      .bind("ig_acc_consumer:c_ratelimit")
+      .first<{ status: string; provider_message_id: string }>();
+    expect(outcome?.status).toBe("sent");
+    expect(outcome?.provider_message_id).toBe("meta_msg_retried");
+  });
+
   it("marks outcome as unknown and acks on network timeout (no blind retry)", async () => {
     const event: AutomationEvent = {
       schemaVersion: 1,

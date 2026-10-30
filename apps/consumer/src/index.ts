@@ -22,9 +22,15 @@ export default {
     batch: MessageBatch<AutomationEvent>,
     env: ConsumerWorkerEnvironment,
   ): Promise<void> {
-    // Process messages per message (batch size 1 initially per free tier guardrail)
+    // Process messages per message with per-message error boundary
     for (const message of batch.messages) {
-      await processQueueMessage(message, env);
+      try {
+        await processQueueMessage(message, env);
+      } catch (err) {
+        console.error("Unhandled error processing queue message:", err);
+        // Isolate failure to this specific message: retry with backoff, don't abort entire batch
+        message.retry({ delaySeconds: 60 });
+      }
     }
   },
 } satisfies ExportedHandler<ConsumerWorkerEnvironment, AutomationEvent>;

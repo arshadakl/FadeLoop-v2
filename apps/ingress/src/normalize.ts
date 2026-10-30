@@ -99,6 +99,14 @@ export function normalizeWebhookPayload(
         // Comments must have commentId, mediaId, and text
         if (!commentId || !mediaId || !text) continue;
 
+        // Skip self-comments posted by the account or bot itself to prevent feedback loops
+        if (
+          typeof val.from?.id === "string" &&
+          val.from.id.trim() === accountId
+        ) {
+          continue;
+        }
+
         events.push({
           schemaVersion: 1,
           kind: "comment.created",
@@ -120,7 +128,7 @@ export function normalizeWebhookPayload(
 
         const senderId =
           typeof item.sender?.id === "string" ? item.sender.id.trim() : "";
-        if (!senderId) continue;
+        if (!senderId || senderId === accountId) continue;
 
         const itemTime =
           typeof item.timestamp === "number" && Number.isFinite(item.timestamp)

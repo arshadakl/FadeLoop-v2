@@ -20,6 +20,11 @@ export interface ConnectedAccountData {
   tokenExpiresAt: number;
 }
 
+export type ClaimResult =
+  | { status: "claimed" }
+  | { status: "already_settled" }
+  | { status: "retryable" };
+
 export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
   const query = measuredQueries(observer);
 
@@ -135,9 +140,12 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
     /**
      * Atomically claims a comment for delivery.
      * Unique constraint on (account_id, comment_id) guarantees exactly one delivery.
-     * Returns true if claimed, false if already claimed.
+     * If claim exists and this is a redelivery (attemptCount > 1), verifies if previous attempt was retryable.
      */
-    async claimDelivery(claim: DeliveryClaim): Promise<boolean> {
+    async claimDelivery(
+      claim: DeliveryClaim,
+      attemptCount = 1,
+    ): Promise<ClaimResult> {
       try {
         await query(
           "deliveries.claim_insert",
@@ -159,13 +167,31 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
               claim.claimedAt,
             ),
         );
-        return true;
+        return { status: "claimed" };
       } catch (err: unknown) {
         if (
           err instanceof Error &&
           (err.message.includes("UNIQUE") || err.message.includes("constraint"))
         ) {
-          return false;
+          // If this is a redelivery from queue retries, check if previous outcome was retryable
+          if (attemptCount > 1) {
+            const outcomes = await query<{ status: string }>(
+              "deliveries.check_retryable",
+              db
+                .prepare(
+                  `SELECT status FROM delivery_outcomes
+                   WHERE action_key = ?
+                   ORDER BY occurred_at DESC, attempt_count DESC
+                   LIMIT 1`,
+                )
+                .bind(claim.actionKey),
+            );
+            const latest = outcomes[0];
+            if (latest && latest.status === "retryable") {
+              return { status: "retryable" };
+            }
+          }
+          return { status: "already_settled" };
         }
         throw err;
       }
