@@ -1,16 +1,33 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "fadeloop-ingress-local",
+  "name": "fadeloop-ingress",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
-  "vars": { "APP_ENV": "local" },
+  "vars": {
+    "APP_ENV": "production"
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "INCOMING_EVENTS_QUEUE",
+        "queue": "fadeloop-incoming-events"
+      }
+    ]
+  },
   "env": {
-    "test": { "name": "fadeloop-ingress-test", "vars": { "APP_ENV": "test" } },
-    "production": {
-      "name": "fadeloop-ingress",
-      "vars": { "APP_ENV": "production" }
+    "test": {
+      "name": "fadeloop-ingress-test",
+      "vars": { "APP_ENV": "test" },
+      "queues": {
+        "producers": [
+          {
+            "binding": "INCOMING_EVENTS_QUEUE",
+            "queue": "fadeloop-incoming-events"
+          }
+        ]
+      }
     }
   }
 }

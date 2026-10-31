@@ -160,8 +160,8 @@ Exit gate: evidence supports correctness and the declared workload on Free. If i
 
 ## P08 — Deployment and live validation
 
-- [ ] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values.
-- [ ] P08-02: Deploy with sends disabled; verify auth, callback routing, subscriptions, logging, queue/DLQ alerting, and current CPU behavior.
+- [x] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values. (D1 fadeloop-d1 [1d9188c4-7ed0-4036-81aa-9a43f1f7521b], Queues fadeloop-incoming-events & dlq, schema 0001 & 0002 applied, workspace provisioned).
+- [x] P08-02: Deploy with sends disabled; verify auth, callback routing, subscriptions, logging, queue/DLQ alerting, and current CPU behavior. (Deployed fadeloop-ingress, fadeloop-consumer, and fadeloop-api to Cloudflare Workers. Verified /health, /api/health, and Meta webhook verification handshake returning challenge).
 - [ ] P08-03: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
 - [ ] P08-04: Inspect observed traffic and idle periods, compare metered quotas with model, and document safe operating envelope and alert thresholds.
 - [ ] P08-05: Record deployment/version SHA, resource names, migration level, active flags, rollback procedure, recovery owner, and replay restrictions.

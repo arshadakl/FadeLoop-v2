@@ -1,16 +1,45 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "fadeloop-api-local",
+  "name": "fadeloop-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
-  "vars": { "APP_ENV": "local" },
+  "vars": {
+    "APP_ENV": "production"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fadeloop-d1",
+      "database_id": "1d9188c4-7ed0-4036-81aa-9a43f1f7521b"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "LOGIN_RATE_LIMITER",
+      "namespace_id": "10301",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ],
   "env": {
-    "test": { "name": "fadeloop-api-test", "vars": { "APP_ENV": "test" } },
-    "production": {
-      "name": "fadeloop-api",
-      "vars": { "APP_ENV": "production" }
+    "test": {
+      "name": "fadeloop-api-test",
+      "vars": { "APP_ENV": "test" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "fadeloop-d1",
+          "database_id": "1d9188c4-7ed0-4036-81aa-9a43f1f7521b"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "LOGIN_RATE_LIMITER",
+          "namespace_id": "10301",
+          "simple": { "limit": 5, "period": 60 }
+        }
+      ]
     }
   }
 }
