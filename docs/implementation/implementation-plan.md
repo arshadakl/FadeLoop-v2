@@ -158,13 +158,22 @@ Exit gate: an owner manages the direct workflow from the UI; tenant isolation, a
 
 Exit gate: evidence supports correctness and the declared workload on Free. If it does not fit, simplify, durably split measured work, or record a product capacity limit; do not silently upgrade or weaken correctness.
 
-## P08 — Deployment and live validation
+## P08 — Deployment and live validation (Unified Single-Worker Architecture)
 
-- [x] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values. (D1 fadeloop-d1 [1d9188c4-7ed0-4036-81aa-9a43f1f7521b], Queues fadeloop-incoming-events & dlq, schema 0001 & 0002 applied, workspace provisioned).
-- [x] P08-02: Deploy with sends disabled; verify auth, callback routing, subscriptions, logging, queue/DLQ alerting, and current CPU behavior. (Deployed fadeloop-ingress, fadeloop-consumer, and fadeloop-api to Cloudflare Workers. Verified /health, /api/health, and Meta webhook verification handshake returning challenge).
-- [ ] P08-03: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
-- [ ] P08-04: Inspect observed traffic and idle periods, compare metered quotas with model, and document safe operating envelope and alert thresholds.
-- [ ] P08-05: Record deployment/version SHA, resource names, migration level, active flags, rollback procedure, recovery owner, and replay restrictions.
+> [!NOTE]
+> **Architectural Refinement (Single Unified Worker)**:
+> Following deployment analysis and user direction, FadeLoop V2 consolidates the 3 separate worker entry points (`ingress`, `consumer`, `api`) and separate Pages project into a **Single Cloudflare Worker** (`apps/server`, deployed as `fadeloop`) utilizing **Cloudflare Workers Static Assets** (`assets` binding) and **Queues**.
+> 
+> **Guardrail & Anti-Pattern Compliance**:
+> - **CPU-01 Adherence**: Ingress and delivery execution remain strictly separated. The `fetch` handler for `/webhook` only validates HMAC and enqueues to `fadeloop-incoming-events` (< 3 ms CPU). The `queue` handler runs in an independent, asynchronous Cloudflare invocation with its own 10 ms CPU clock (< 5 ms CPU). No synchronous sends occur on the HTTP path.
+> - **Zero Proxy Overhead & True Same-Origin**: The React dashboard and API share the exact same host (`fadeloop.<account>.workers.dev`). No Pages function proxying is required; `__Host-fadeloop-session` HttpOnly cookies and same-origin credentials work natively.
+> - **Operational Simplicity**: 1 deployment command, 1 domain for all Meta configurations, and 1 secret vault.
+
+- [x] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values. (D1 fadeloop-d1 [0ed5b3ff-2f78-4c2e-88e6-1b283649318f on arshad-zero], Queues fadeloop-incoming-events & dlq, schema 0001 & 0002 applied, workspace provisioned).
+- [ ] P08-02: Consolidate runtime into unified worker (`apps/server`) with Workers Static Assets (`dist`), HTTP router (`/webhook`, `/api/*`, `/health`), and asynchronous Queue consumer (`queue()`). Verify all 75 tests, lint, and build.
+- [ ] P08-03: Deploy unified `fadeloop` worker with sends disabled; bind D1, Queue producer + consumer, static assets, rate limiter, and upload encrypted secrets. Verify live health, UI asset delivery, and Meta challenge handshake.
+- [ ] P08-04: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
+- [ ] P08-05: Inspect observed traffic and idle periods, compare metered quotas with model, record deployment/version SHA, resource names, migration level, rollback procedure, and recovery owner.
 
 Exit gate: live evidence matches the declared scope and the operator can stop sending and recover safely. Code and docs push to `dev` only; deployment does not require a `main` push.
 
