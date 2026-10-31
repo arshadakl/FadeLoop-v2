@@ -170,7 +170,7 @@ Exit gate: evidence supports correctness and the declared workload on Free. If i
 > - **Operational Simplicity**: 1 deployment command, 1 domain for all Meta configurations, and 1 secret vault.
 
 - [x] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values. (D1 fadeloop-d1 [0ed5b3ff-2f78-4c2e-88e6-1b283649318f on arshad-zero], Queues fadeloop-incoming-events & dlq, schema 0001 & 0002 applied, workspace provisioned).
-- [ ] P08-02: Consolidate runtime into unified worker (`apps/server`) with Workers Static Assets (`dist`), HTTP router (`/webhook`, `/api/*`, `/health`), and asynchronous Queue consumer (`queue()`). Verify all 75 tests, lint, and build.
+- [x] P08-02: Consolidate runtime into unified worker (`apps/server`) with Workers Static Assets (`dist`), HTTP router (`/webhook`, `/api/*`, `/health`), and asynchronous Queue consumer (`queue()`). Verify all 75 tests, lint, and build. (Verified: 18 test files, 75 tests pass; Biome lint and boundary checks pass; production build succeeds).
 - [ ] P08-03: Deploy unified `fadeloop` worker with sends disabled; bind D1, Queue producer + consumer, static assets, rate limiter, and upload encrypted secrets. Verify live health, UI asset delivery, and Meta challenge handshake.
 - [ ] P08-04: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
 - [ ] P08-05: Inspect observed traffic and idle periods, compare metered quotas with model, record deployment/version SHA, resource names, migration level, rollback procedure, and recovery owner.

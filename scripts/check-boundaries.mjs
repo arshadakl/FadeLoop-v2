@@ -36,7 +36,7 @@ async function check(directory) {
           if (
             /^(@fadeloop\/worker-common|cloudflare:|node:)/.test(name) ||
             (resolved &&
-              /\/(apps\/(api|ingress|consumer)|packages\/worker-common)\//.test(
+              /\/(apps\/(api|ingress|consumer|server)|packages\/worker-common)\//.test(
                 resolved,
               ))
           ) {

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -20,6 +21,9 @@ await writeFile(
   `INSERT INTO workspaces (id, owner_id, created_at) VALUES ('${randomUUID()}', '${ownerId}', ${Date.now()}) ON CONFLICT (owner_id) DO NOTHING;\n`,
 );
 // Fixed --local and config; this command cannot provision a remote database.
+const configPath = existsSync("apps/server/wrangler.local.jsonc")
+  ? "apps/server/wrangler.local.jsonc"
+  : "apps/api/wrangler.local.jsonc";
 execFileSync(
   process.execPath,
   [
@@ -29,7 +33,7 @@ execFileSync(
     "DB",
     "--local",
     "--config",
-    "apps/api/wrangler.local.jsonc",
+    configPath,
     "--file",
     file,
   ],

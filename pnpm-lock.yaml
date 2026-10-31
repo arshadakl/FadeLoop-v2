@@ -66,6 +66,18 @@ importers:
         specifier: workspace:*
         version: link:../../packages/worker-common
 
+  apps/server:
+    dependencies:
+      '@fadeloop/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@fadeloop/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@fadeloop/worker-common':
+        specifier: workspace:*
+        version: link:../../packages/worker-common
+
   apps/web:
     dependencies:
       '@fadeloop/contracts':

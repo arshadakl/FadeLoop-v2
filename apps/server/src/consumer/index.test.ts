@@ -22,12 +22,12 @@ beforeAll(async () => {
   db = (await runtime.getD1Database("DB")) as unknown as D1Database;
 
   const sql0001 = await readFile(
-    new URL("../../../schema/0001_owner_and_accounts.sql", import.meta.url),
+    new URL("../../../../schema/0001_owner_and_accounts.sql", import.meta.url),
     "utf8",
   );
   const sql0002 = await readFile(
     new URL(
-      "../../../schema/0002_campaigns_and_deliveries.sql",
+      "../../../../schema/0002_campaigns_and_deliveries.sql",
       import.meta.url,
     ),
     "utf8",

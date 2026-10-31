@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "fadeloop-api-local",
+  "name": "fadeloop-local",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
   "workers_dev": false,
@@ -19,5 +19,22 @@
       "database_name": "fadeloop-local",
       "migrations_dir": "../../schema"
     }
-  ]
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "INCOMING_EVENTS_QUEUE",
+        "queue": "fadeloop-incoming-events"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "fadeloop-incoming-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "fadeloop-incoming-events-dlq"
+      }
+    ]
+  }
 }
