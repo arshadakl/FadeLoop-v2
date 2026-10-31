@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 const FoundationPage = lazy(() => import("../pages/foundation-page"));
@@ -7,6 +7,19 @@ const LoginPage = lazy(() => import("../pages/login-page"));
 const CampaignsPage = lazy(() => import("../pages/campaigns-page"));
 const AccountsPage = lazy(() => import("../pages/accounts-page"));
 const DeliveriesPage = lazy(() => import("../pages/deliveries-page"));
+
+function AuthCallbackHandler() {
+  useEffect(() => {
+    window.location.replace(
+      `/api/auth/instagram/callback${window.location.search}`,
+    );
+  }, []);
+  return (
+    <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center text-sm text-slate-400">
+      Completing Instagram authentication…
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +46,11 @@ export function App() {
             <Route path="/deliveries" element={<DeliveriesPage />} />
             <Route path="/foundation" element={<FoundationPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+            <Route
+              path="/api/auth/instagram/callback"
+              element={<AuthCallbackHandler />}
+            />
             <Route
               path="*"
               element={
