@@ -8,20 +8,20 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01–P07 fully implemented and locally verified; P08 cloud provisioning and live validation next |
-| Current phase | P00–P07 DONE; P08 READY; P09 DEFERRED |
+| Product stage | P01–P08 Unified Worker deployed live to Cloudflare; Instagram account connected; Phase 8 expansion next |
+| Current phase | P00–P07 DONE; P08 LIVE (P08-01 to P08-04 DONE); P08-06 to P08-09 NEXT; P09 EXPANDED |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
-| Application/runtime | Ingress worker, Consumer worker, API worker, and Creator Dashboard UI all implemented and integrated |
-| Provider verification | Mocked integration tests pass (OAuth handshake, Graph API, webhook HMAC, private reply client); live Cloudflare resources to be provisioned in P08 |
-| Database | Migrations 0001 & 0002 verified locally and across all Miniflare integration suites |
-| Performance evidence | Metered D1 writes measured (6 writes per matching delivery with index amplification); active CPU verified under 5 ms |
-| Tests/builds/deployment | pnpm check PASS, 72 tests across 17 test suites; dry-run builds pass; no cloud deployment yet |
+| Application/runtime | Single unified worker (`apps/server`, `fadeloop`) serving assets, API, ingress, queue consumer, and cron |
+| Provider verification | Meta Webhook verified at `/webhook`; Instagram OAuth live connected with 64-bit ID lossless parsing |
+| Database | D1 `fadeloop-d1` active; migrations 0001 & 0002 applied; owner workspace provisioned; account token sealed |
+| Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
+| Tests/builds/deployment | pnpm check PASS, 75 tests across 18 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Phase 7 reliability and capacity proof |
-| Immediate next action | Phase 8 (P08): Provision Cloudflare Workers Free resources (D1, Queue, API, Ingress, Consumer) and execute live controlled test |
-| Current blockers | None. Ready for P08 live deployment. |
-| Secrets/resources | Credentials stored in ignored .dev.vars. Zero secrets in client code. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), [P07 failure injection](../../apps/consumer/src/failure-injection.test.ts), [P07 concurrency](../../apps/consumer/src/concurrency.test.ts) |
+| Active owner | Antigravity: Phase 8 Expansion (Token Refresh, Media Picker, 2-Step Anti-Spam, Pacing) |
+| Immediate next action | Implement P08-06 (Automated Token Refresh Cron) and P08-07 (Visual Media Picker API & UI) |
+| Current blockers | None. Ready for P08-06 and P08-07 implementation. |
+| Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version d53f9702-0bb9-48b6-b703-9d0b7c25ef13 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
@@ -171,17 +171,22 @@ Exit gate: evidence supports correctness and the declared workload on Free. If i
 
 - [x] P08-01: Provision least-required Free-tier resources and bindings; document actual account plan, quota sharing, selected API version, secrets names, and migrations without exposing secret values. (D1 fadeloop-d1 [73463ef9-fe20-414f-b132-d3e4e9f80e73 on arshad-zero], Queues fadeloop-incoming-events & dlq, schema 0001 & 0002 applied, workspace provisioned).
 - [x] P08-02: Consolidate runtime into unified worker (`apps/server`) with Workers Static Assets (`dist`), HTTP router (`/webhook`, `/api/*`, `/health`), and asynchronous Queue consumer (`queue()`). Verify all 75 tests, lint, and build. (Verified: 18 test files, 75 tests pass; Biome lint and boundary checks pass; production build succeeds).
-- [x] P08-03: Deploy unified `fadeloop` worker with sends disabled; bind D1, Queue producer + consumer, static assets, rate limiter, and upload encrypted secrets. Verify live health, UI asset delivery, and Meta challenge handshake. (Live version 81cef590-2564-4e5a-b66e-b7ea1452d3a0 verified: /health 200, /api/health 200, / 200 HTML, Meta webhook challenge 200, unknown api 404).
-- [ ] P08-04: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
-- [ ] P08-05: Inspect observed traffic and idle periods, compare metered quotas with model, record deployment/version SHA, resource names, migration level, rollback procedure, and recovery owner.
+- [x] P08-03: Deploy unified `fadeloop` worker with sends disabled; bind D1, Queue producer + consumer, static assets, rate limiter, and upload encrypted secrets. Verify live health, UI asset delivery, and Meta challenge handshake. (Live version deployed: /health 200, /api/health 200, / 200 HTML, Meta webhook challenge 200 verified).
+- [x] P08-04: Live Instagram OAuth verification with lossless 64-bit ID parsing. (Connected successfully, AES-256-GCM token sealed in D1).
+- [ ] P08-05: Enable one controlled test campaign and validate real comments, duplicate behavior, pause, error display, and Meta rate feedback. No V1/V2 dual-send period.
+- [ ] P08-06: Implement Automated Token Refresh Cron (Anti-Disconnect): Worker `scheduled` event running daily at 03:00 UTC; refreshes tokens with `expires_at <= now + 15 days` via Meta `refresh_access_token`; re-encrypts in D1. Zero manual reconnects required.
+- [ ] P08-07: Implement Visual Media Picker (Reels & Posts): Backend endpoint `GET /api/accounts/:id/media` to fetch latest 24 media items from Graph API; UI gallery in Campaign drawer with thumbnails, reel badges, caption previews, and click-to-select.
+- [ ] P08-08: Implement 2-Step Anti-Spam "Send Me" Confirmation Button Flow: Schema migration 0003 for confirmation button settings; Step 1 private reply sends interactive prompt with "Send Me" button; Webhook normalizes `messaging_postbacks` and quick reply clicks; Step 2 delivers target link within the active 24h messaging window to prevent Meta link-spam flags.
+- [ ] P08-09: Queue Pacing & Rate-Limit Guardrails: Enforce minimum 2.0s interval between Meta sends per account; classify Meta error code 32 (Page request limit reached) with exponential backoff and `delaySeconds: 60`.
+- [ ] P08-10: Inspect observed traffic and idle periods, compare metered quotas with model, record deployment/version SHA, resource names, migration level, rollback procedure, and recovery owner.
 
 Exit gate: live evidence matches the declared scope and the operator can stop sending and recover safely. Code and docs push to `dev` only; deployment does not require a `main` push.
 
-## P09 — Optional flows (deferred)
+## P09 — Advanced interactive flows (expanded)
 
-Entry condition: P08 direct release is verified and a concrete product need justifies added state.
+Entry condition: P08 direct and 2-step button release is verified and a concrete product need justifies added state.
 
-- [ ] P09-01: Tap-to-continue using verified qualifying interaction, opaque/authenticated payload, expiry, user/account/session binding, and compare-and-set step version.
+- [ ] P09-01: Tap-to-continue multi-step flows using verified qualifying interaction, opaque/authenticated payload, expiry, user/account/session binding, and compare-and-set step version.
 - [ ] P09-02: Email collection with explicit UI/purpose, validation, protected storage, retention, and flow cancellation.
 - [ ] P09-03: Follow gate only after proving the selected API exposes the needed eligible relationship field. Unknown lookup remains unknown.
 - [ ] P09-04: Independently profile each new invocation and update quota/retry models; prove concurrency and stale interaction behavior.
