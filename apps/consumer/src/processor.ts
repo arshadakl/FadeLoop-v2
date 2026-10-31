@@ -3,6 +3,7 @@ import {
   isCommentWithinReplyWindow,
   matchComment,
 } from "@fadeloop/domain/matching";
+import type { QueryObserver } from "@fadeloop/worker-common/database";
 import { sendInstagramPrivateReply } from "@fadeloop/worker-common/meta/private-reply-client";
 import { createTokenVault } from "@fadeloop/worker-common/meta/token-vault";
 import { createConsumerStore } from "./storage";
@@ -43,6 +44,7 @@ export async function processQueueMessage(
   env: ConsumerEnvironment,
   fetcher: typeof fetch = fetch,
   now: number = Date.now(),
+  observer?: QueryObserver,
 ): Promise<void> {
   const event = message.body;
 
@@ -68,7 +70,7 @@ export async function processQueueMessage(
     return;
   }
 
-  const store = createConsumerStore(env.DB);
+  const store = createConsumerStore(env.DB, observer);
 
   // 4. Look up active published campaign for this post/reel
   const active = await store.findActiveCampaignForMedia(

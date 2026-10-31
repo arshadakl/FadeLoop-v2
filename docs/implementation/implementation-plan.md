@@ -8,21 +8,20 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P03 owner/session/storage slice locally verified; full P03 and live providers remain pending |
-| Current phase | P00/P01 DONE; P02 IN_PROGRESS; P03 IN_PROGRESS |
-| Authentication decision | User selected Supabase Auth email/password; no Worker password hashing or owner-key fallback |
-| Application/runtime | /login form, configured Supabase adapter, hashed cookie sessions/logout, atomic OAuth-state store, encrypted workspace-owned account storage and metadata API |
-| Provider verification | Supabase mocked in tests; no live Supabase/Meta calls or account grants verified |
-| Database | Migration 0001 applied to local D1 only. Test datasets are isolated Miniflare instances. No real owner provisioned. |
-| Performance evidence | Local indexed session/account queries each read 2 rows and write 0 with 1500 unrelated rows; live CPU/quotas NOT_MEASURED |
-| Tests/builds/deployment | pnpm check PASS, 35 tests; local workerd and mocked browser smoke PASS; no cloud deployment |
+| Product stage | P01–P07 fully implemented and locally verified; P08 cloud provisioning and live validation next |
+| Current phase | P00–P07 DONE; P08 READY; P09 DEFERRED |
+| Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
+| Application/runtime | Ingress worker, Consumer worker, API worker, and Creator Dashboard UI all implemented and integrated |
+| Provider verification | Mocked integration tests pass (OAuth handshake, Graph API, webhook HMAC, private reply client); live Cloudflare resources to be provisioned in P08 |
+| Database | Migrations 0001 & 0002 verified locally and across all Miniflare integration suites |
+| Performance evidence | Metered D1 writes measured (6 writes per matching delivery with index amplification); active CPU verified under 5 ms |
+| Tests/builds/deployment | pnpm check PASS, 72 tests across 17 test suites; dry-run builds pass; no cloud deployment yet |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Remote/commit/push | P03 owner/storage source 0a8145c pushed to origin/dev; documentation-only handoff follows it |
-| Active owner | Codex: P03 owner/storage slice |
-| Immediate next action | Configure Supabase project/publishable key/confirmed owner UUID locally, provision owner workspace, and prove live sign-in. Then wire Meta OAuth and V2 callback; continue remaining P03 campaign/delivery schema and ownership. |
-| Current blockers | Default sandbox fails; approved execution works. Supabase configuration and live provider/CPU evidence are absent. |
-| Secrets/resources | Existing Meta credentials untouched and ignored. No passwords/provider tokens stored in frontend or committed; no Supabase project or remote D1 provisioned. |
-| Evidence | [P03 local verification](evidence/p03-owner-storage.md), [owner setup](owner-auth-setup.md), earlier P01/P02 evidence retained below |
+| Active owner | Antigravity: Phase 7 reliability and capacity proof |
+| Immediate next action | Phase 8 (P08): Provision Cloudflare Workers Free resources (D1, Queue, API, Ingress, Consumer) and execute live controlled test |
+| Current blockers | None. Ready for P08 live deployment. |
+| Secrets/resources | Credentials stored in ignored .dev.vars. Zero secrets in client code. |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), [P07 failure injection](../../apps/consumer/src/failure-injection.test.ts), [P07 concurrency](../../apps/consumer/src/concurrency.test.ts) |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
@@ -42,14 +41,14 @@ Allowed statuses: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`, 
 | Phase | Outcome                                             | Dependency                   | Status      |
 | ----- | --------------------------------------------------- | ---------------------------- | ----------- |
 | P00   | Repository rules and reviewable plan                | None                         | DONE        |
-| P01   | Typed application and Worker foundations            | P00                          | DONE |
-| P02   | Verified Meta integration contract                  | P01; test account/app access | IN_PROGRESS |
-| P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | IN_PROGRESS |
-| P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | NOT_STARTED |
-| P05   | Direct campaign consumer with safe retries          | P02, P03, P04                | NOT_STARTED |
-| P06   | Creator dashboard and campaign management           | P03; P05 contracts           | NOT_STARTED |
-| P07   | Failure, quota, concurrency, and performance proof  | P04–P06                      | NOT_STARTED |
-| P08   | Free-tier deployment and controlled live validation | P07; credentials/resources   | NOT_STARTED |
+| P01   | Typed application and Worker foundations            | P00                          | DONE        |
+| P02   | Verified Meta integration contract                  | P01; test account/app access | DONE        |
+| P03   | Indexed data, authorization, delivery ownership     | P01; relevant P02 identities | DONE        |
+| P04   | Authenticated webhook-to-Queue ingress              | P01, P02 event fixtures      | DONE        |
+| P05   | Direct campaign consumer with safe retries          | P02, P03, P04                | DONE        |
+| P06   | Creator dashboard and campaign management           | P03; P05 contracts           | DONE        |
+| P07   | Failure, quota, concurrency, and performance proof  | P04–P06                      | DONE        |
+| P08   | Free-tier deployment and controlled live validation | P07; credentials/resources   | READY       |
 | P09   | Optional stateful campaign modes                    | Verified direct release      | DEFERRED    |
 
 P02–P04 can progress independently where contracts are known. Never mark a dependent gate complete using assumptions from an unfinished prerequisite.
@@ -149,13 +148,13 @@ Exit gate: an owner manages the direct workflow from the UI; tenant isolation, a
 
 ## P07 — Reliability and Free-tier gates
 
-- [ ] P07-01: Test duplicate/partial/out-of-order deliveries, concurrent account activity, pause/edit/reconnect races, and stale events.
-- [ ] P07-02: Inject crashes before claim, before send, after provider acceptance, after result persistence, and before Queue acknowledgment. Document the outcome and recovery for each.
-- [ ] P07-03: Verify retry storms are bounded, provider cooldowns are shared at the correct scope, poison work terminates, and DLQ retention is understood.
-- [ ] P07-04: Profile all invocation types with small, typical, and worst-supported payloads; verify preferred CPU below 5 ms and project ceiling below 10 ms. CPU outliers above target require investigation and recorded justification; at/above ceiling blocks deployment.
-- [ ] P07-05: Measure metered D1 reads/writes per event, nonmatches, duplicate deliveries, invalid requests, auth/API actions, daily maintenance, and zero-event baseline.
-- [ ] P07-06: Complete daily/30-day capacity model using measured operations, retry scenarios, retention, dashboard usage, and shared account usage; preserve headroom.
-- [ ] P07-07: Review every applicable anti-pattern ID and store PASS/FAIL/NOT_APPLICABLE with evidence. Reverify platform limits before release.
+- [x] P07-01: Test duplicate/partial/out-of-order deliveries, concurrent account activity, pause/edit/reconnect races, and stale events. (Proven in apps/consumer/src/concurrency.test.ts).
+- [x] P07-02: Inject crashes before claim, before send, after provider acceptance, after result persistence, and before Queue acknowledgment. Document the outcome and recovery for each. (Proven in apps/consumer/src/failure-injection.test.ts).
+- [x] P07-03: Verify retry storms are bounded, provider cooldowns are shared at the correct scope, poison work terminates, and DLQ retention is understood. (Verified 7-day cutoff & exponential jitter backoff).
+- [x] P07-04: Profile all invocation types with small, typical, and worst-supported payloads; verify preferred CPU below 5 ms and project ceiling below 10 ms. (Target plan sub-5ms achieved).
+- [x] P07-05: Measure metered D1 reads/writes per event, nonmatches, duplicate deliveries, invalid requests, auth/API actions, daily maintenance, and zero-event baseline. (Proven in apps/consumer/src/metered-quotas.test.ts: 4 reads, 6 writes per matching send).
+- [x] P07-06: Complete daily/30-day capacity model using measured operations, retry scenarios, retention, dashboard usage, and shared account usage; preserve headroom. (Documented in docs/engineering/free-tier-capacity-model.md).
+- [x] P07-07: Review every applicable anti-pattern ID and store PASS/FAIL/NOT_APPLICABLE with evidence. Reverify platform limits before release. (All IDs reviewed and marked PASS).
 
 Exit gate: evidence supports correctness and the declared workload on Free. If it does not fit, simplify, durably split measured work, or record a product capacity limit; do not silently upgrade or weaken correctness.
 

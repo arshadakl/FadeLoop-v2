@@ -187,7 +187,8 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
                 .bind(claim.actionKey),
             );
             const latest = outcomes[0];
-            if (latest && latest.status === "retryable") {
+            // Retry if explicitly retryable OR if prior attempt crashed before writing an outcome
+            if (!latest || latest.status === "retryable") {
               return { status: "retryable" };
             }
           }
