@@ -101,7 +101,7 @@ export async function handleApiRequest(
   }
 
   // Instagram OAuth Callback
-  if (path === "/api/auth/instagram/callback") {
+  if (path === "/api/auth/instagram/callback" || path === "/auth/callback") {
     if (
       !env.DB ||
       !env.APP_ORIGIN ||

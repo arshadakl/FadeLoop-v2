@@ -28,8 +28,8 @@ export default {
       return handleWebhookRequest(request, env);
     }
 
-    // 3. Creator REST API
-    if (path.startsWith("/api/")) {
+    // 3. Creator REST API & OAuth Callback
+    if (path.startsWith("/api/") || path === "/auth/callback") {
       return handleApiRequest(request, env);
     }
 
