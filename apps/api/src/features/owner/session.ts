@@ -47,16 +47,24 @@ export async function authenticateOwner(
 
 export function hasTrustedOrigin(request: Request, appOrigin: string): boolean {
   try {
-    const configured = new URL(appOrigin);
-    const safeProtocol =
-      configured.protocol === "https:" ||
-      (configured.protocol === "http:" &&
-        ["127.0.0.1", "localhost", "[::1]"].includes(configured.hostname));
-    return (
-      safeProtocol &&
-      configured.origin === appOrigin &&
-      request.headers.get("origin") === appOrigin
-    );
+    const origins = appOrigin.split(",").map((item) => item.trim());
+    const reqOrigin = request.headers.get("origin");
+    if (!reqOrigin) return false;
+
+    return origins.some((origin) => {
+      try {
+        const configured = new URL(origin);
+        const safeProtocol =
+          configured.protocol === "https:" ||
+          (configured.protocol === "http:" &&
+            ["127.0.0.1", "localhost", "[::1]"].includes(configured.hostname));
+        return (
+          safeProtocol && configured.origin === origin && reqOrigin === origin
+        );
+      } catch {
+        return false;
+      }
+    });
   } catch {
     return false;
   }

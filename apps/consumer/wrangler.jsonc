@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "fadeloop-consumer",
+  "account_id": "d2d71c52d0381df127528c8919382eb7",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
   "workers_dev": false,
@@ -12,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "fadeloop-d1",
-      "database_id": "1d9188c4-7ed0-4036-81aa-9a43f1f7521b"
+      "database_id": "0ed5b3ff-2f78-4c2e-88e6-1b283649318f"
     }
   ],
   "queues": {
@@ -34,7 +35,7 @@
         {
           "binding": "DB",
           "database_name": "fadeloop-d1",
-          "database_id": "1d9188c4-7ed0-4036-81aa-9a43f1f7521b"
+          "database_id": "0ed5b3ff-2f78-4c2e-88e6-1b283649318f"
         }
       ],
       "queues": {
