@@ -1,4 +1,5 @@
 import { healthResponse, unavailable } from "@fadeloop/worker-common/http";
+import { apiError } from "../common/http";
 import type { ServerEnvironment } from "../environment";
 import {
   handleInstagramCallback,
@@ -184,5 +185,5 @@ export async function handleApiRequest(
     }
   }
 
-  return unavailable();
+  return apiError("NOT_FOUND", 404);
 }

@@ -62,7 +62,7 @@ export async function handleOwnerLogin(
       now: input.now,
       expiresAt,
     });
-    const isSecure = new URL(input.appOrigin).protocol === "https:";
+    const isSecure = new URL(request.url).protocol === "https:";
     return Response.json(
       { workspaceId: row.id, expiresAt },
       {

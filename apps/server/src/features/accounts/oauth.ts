@@ -7,7 +7,7 @@ import {
   createOAuthAttempt,
 } from "@fadeloop/worker-common/meta/oauth-state";
 import { apiError } from "../../common/http";
-import { authenticateOwner } from "../owner/session";
+import { authenticateOwner, getPrimaryAppOrigin } from "../owner/session";
 import { createOwnerStore } from "../owner/storage";
 import { createAccountStore } from "./storage";
 
@@ -75,13 +75,12 @@ export async function handleInstagramCallback(
 ): Promise<Response> {
   if (request.method !== "GET") return apiError("METHOD_NOT_ALLOWED", 405);
 
+  const baseOrigin = getPrimaryAppOrigin(env.APP_ORIGIN);
+
   const session = await authenticateOwner(request, env.DB, now);
   if (!session) {
     // If not authenticated, redirect to login
-    return Response.redirect(
-      `${env.APP_ORIGIN}/login?error=unauthenticated`,
-      302,
-    );
+    return Response.redirect(`${baseOrigin}/login?error=unauthenticated`, 302);
   }
 
   const url = new URL(request.url);
@@ -91,15 +90,12 @@ export async function handleInstagramCallback(
   const errorReason = url.searchParams.get("error_reason");
 
   if (error || errorReason) {
-    return Response.redirect(
-      `${env.APP_ORIGIN}/accounts?error=oauth_denied`,
-      302,
-    );
+    return Response.redirect(`${baseOrigin}/accounts?error=oauth_denied`, 302);
   }
 
   if (!code || !state) {
     return Response.redirect(
-      `${env.APP_ORIGIN}/accounts?error=invalid_request`,
+      `${baseOrigin}/accounts?error=invalid_request`,
       302,
     );
   }
@@ -115,10 +111,7 @@ export async function handleInstagramCallback(
   );
 
   if (!validState) {
-    return Response.redirect(
-      `${env.APP_ORIGIN}/accounts?error=state_expired`,
-      302,
-    );
+    return Response.redirect(`${baseOrigin}/accounts?error=state_expired`, 302);
   }
 
   try {
@@ -154,13 +147,13 @@ export async function handleInstagramCallback(
 
     if (!connected) {
       return Response.redirect(
-        `${env.APP_ORIGIN}/accounts?error=connect_failed`,
+        `${baseOrigin}/accounts?error=connect_failed`,
         302,
       );
     }
 
     return Response.redirect(
-      `${env.APP_ORIGIN}/accounts?connected=true&accountId=${encodeURIComponent(shortLived.userId)}`,
+      `${baseOrigin}/accounts?connected=true&accountId=${encodeURIComponent(shortLived.userId)}`,
       302,
     );
   } catch (err) {
@@ -168,7 +161,7 @@ export async function handleInstagramCallback(
     const reason =
       err instanceof MetaOAuthError ? err.reason : "exchange_failed";
     return Response.redirect(
-      `${env.APP_ORIGIN}/accounts?error=${encodeURIComponent(reason)}`,
+      `${baseOrigin}/accounts?error=${encodeURIComponent(reason)}`,
       302,
     );
   }

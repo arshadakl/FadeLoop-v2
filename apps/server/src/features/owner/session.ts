@@ -45,12 +45,25 @@ export async function authenticateOwner(
   return createOwnerStore(db).findSession(await sessionDigest(token), now);
 }
 
+export function getPrimaryAppOrigin(appOrigin: string): string {
+  const first = appOrigin.split(",")[0]?.trim();
+  return first && first.length > 0 ? first : "http://localhost:5173";
+}
+
 export function hasTrustedOrigin(request: Request, appOrigin: string): boolean {
   try {
-    const origins = appOrigin.split(",").map((item) => item.trim());
     const reqOrigin = request.headers.get("origin");
     if (!reqOrigin) return false;
 
+    // Same-origin check for unified single worker
+    try {
+      const selfOrigin = new URL(request.url).origin;
+      if (reqOrigin === selfOrigin) return true;
+    } catch {
+      // Fall through to configured origins
+    }
+
+    const origins = appOrigin.split(",").map((item) => item.trim());
     return origins.some((origin) => {
       try {
         const configured = new URL(origin);

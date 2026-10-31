@@ -3,8 +3,45 @@ import { verifyWebhookSignature } from "@fadeloop/worker-common/meta/signature";
 import type { ServerEnvironment } from "../environment";
 import { normalizeWebhookPayload } from "./normalize";
 
-// Bounded maximum request body: 64 KB
+// Bounded maximum request body: 64 KB (CPU-03)
 const MAX_BODY_BYTES = 65_536;
+
+async function readBoundedBuffer(
+  request: Request,
+  maxBytes: number,
+): Promise<ArrayBuffer | null> {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > maxBytes) {
+    return null;
+  }
+  const reader = request.body?.getReader();
+  if (!reader) {
+    return new ArrayBuffer(0);
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+    const result = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return result.buffer as ArrayBuffer;
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 export async function handleWebhookRequest(
   request: Request,
@@ -23,7 +60,8 @@ export async function handleWebhookRequest(
       env.META_WEBHOOK_VERIFY_TOKEN &&
       token === env.META_WEBHOOK_VERIFY_TOKEN &&
       challenge &&
-      /^[a-zA-Z0-9_-]+$/.test(challenge)
+      challenge.length <= 256 &&
+      /^[a-zA-Z0-9_.-]+$/.test(challenge)
     ) {
       return new Response(challenge, {
         status: 200,
@@ -51,14 +89,9 @@ export async function handleWebhookRequest(
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Bounded raw body read
-    const contentLength = Number(request.headers.get("content-length") ?? 0);
-    if (contentLength > MAX_BODY_BYTES) {
-      return new Response("Payload Too Large", { status: 413 });
-    }
-
-    const rawBuffer = await request.arrayBuffer();
-    if (rawBuffer.byteLength > MAX_BODY_BYTES) {
+    // Streaming bounded raw body read (immune to chunked memory inflation)
+    const rawBuffer = await readBoundedBuffer(request, MAX_BODY_BYTES);
+    if (!rawBuffer) {
       return new Response("Payload Too Large", { status: 413 });
     }
 

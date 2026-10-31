@@ -18,7 +18,8 @@
     {
       "binding": "DB",
       "database_name": "fadeloop-d1",
-      "database_id": "0ed5b3ff-2f78-4c2e-88e6-1b283649318f"
+      "database_id": "73463ef9-fe20-414f-b132-d3e4e9f80e73",
+      "migrations_dir": "../../schema"
     }
   ],
   "queues": {
@@ -31,9 +32,9 @@
     "consumers": [
       {
         "queue": "fadeloop-incoming-events",
-        "max_batch_size": 10,
-        "max_batch_timeout": 5,
-        "max_retries": 3,
+        "max_batch_size": 1,
+        "max_batch_timeout": 0,
+        "max_retries": 5,
         "dead_letter_queue": "fadeloop-incoming-events-dlq"
       }
     ]
@@ -53,7 +54,8 @@
         {
           "binding": "DB",
           "database_name": "fadeloop-d1",
-          "database_id": "0ed5b3ff-2f78-4c2e-88e6-1b283649318f"
+          "database_id": "73463ef9-fe20-414f-b132-d3e4e9f80e73",
+          "migrations_dir": "../../schema"
         }
       ],
       "queues": {
@@ -66,9 +68,9 @@
         "consumers": [
           {
             "queue": "fadeloop-incoming-events",
-            "max_batch_size": 10,
-            "max_batch_timeout": 5,
-            "max_retries": 3,
+            "max_batch_size": 1,
+            "max_batch_timeout": 0,
+            "max_retries": 5,
             "dead_letter_queue": "fadeloop-incoming-events-dlq"
           }
         ]

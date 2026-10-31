@@ -26,7 +26,7 @@ export async function handleOwnerSession(
     );
   if (request.method === "DELETE") {
     await createOwnerStore(db).revokeSession(session.sessionDigest);
-    const isSecure = new URL(appOrigin).protocol === "https:";
+    const isSecure = new URL(request.url).protocol === "https:";
     return new Response(null, {
       status: 204,
       headers: {
