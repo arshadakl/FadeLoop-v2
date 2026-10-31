@@ -117,6 +117,52 @@ export function createAccountStore(
       );
       return rows.length === 1;
     },
+    async findExpiring(thresholdTimestamp: number, limit = 10) {
+      return query<
+        CredentialRow & { account_id: string; workspace_id: string }
+      >(
+        "accounts.find_expiring",
+        db
+          .prepare(
+            "SELECT account_id, workspace_id, generation, status, token_ciphertext, token_expires_at FROM instagram_accounts WHERE status = 'connected' AND token_expires_at <= ? ORDER BY token_expires_at ASC LIMIT ?",
+          )
+          .bind(thresholdTimestamp, limit),
+      );
+    },
+    async updateRefreshedToken(input: {
+      workspaceId: string;
+      accountId: string;
+      accessToken: string;
+      expiresAt: number;
+      now: number;
+    }): Promise<boolean> {
+      if (
+        !Number.isSafeInteger(input.expiresAt) ||
+        input.expiresAt <= input.now
+      ) {
+        throw new Error("Invalid token expiry");
+      }
+      const vault = await createTokenVault(encryptionKey);
+      const ciphertext = await vault.seal(
+        input.accessToken,
+        context(input.workspaceId, input.accountId),
+      );
+      const rows = await query<{ account_id: string }>(
+        "accounts.update_token",
+        db
+          .prepare(
+            "UPDATE instagram_accounts SET token_ciphertext = ?, token_expires_at = ?, updated_at = ? WHERE account_id = ? AND workspace_id = ? RETURNING account_id",
+          )
+          .bind(
+            ciphertext,
+            input.expiresAt,
+            input.now,
+            input.accountId,
+            input.workspaceId,
+          ),
+      );
+      return rows.length === 1;
+    },
     async list(workspaceId: string, after = "") {
       return listAccounts(db, workspaceId, after, observer);
     },

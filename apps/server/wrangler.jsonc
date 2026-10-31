@@ -40,6 +40,9 @@
       }
     ]
   },
+  "triggers": {
+    "crons": ["0 3 * * *"]
+  },
   "ratelimits": [
     {
       "name": "LOGIN_RATE_LIMITER",

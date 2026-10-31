@@ -4,6 +4,7 @@ import { healthResponse, unavailable } from "@fadeloop/worker-common/http";
 import { handleApiRequest } from "./api/handler";
 import { processQueueMessage } from "./consumer/processor";
 import type { ServerEnvironment } from "./environment";
+import { refreshExpiringTokens } from "./features/accounts/maintenance";
 import { handleWebhookRequest } from "./ingress/handler";
 
 export default {
@@ -55,5 +56,14 @@ export default {
         message.retry({ delaySeconds: 60 });
       }
     }
+  },
+
+  async scheduled(
+    _controller: ScheduledController,
+    env: ServerEnvironment,
+    _ctx: ExecutionContext,
+  ): Promise<void> {
+    const result = await refreshExpiringTokens(env, Date.now());
+    console.log("Token refresh maintenance completed:", result);
   },
 } satisfies ExportedHandler<ServerEnvironment, AutomationEvent>;

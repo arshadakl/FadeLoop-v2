@@ -25,3 +25,27 @@ export async function initiateInstagramOAuthConnect(
   );
   return data.authorizeUrl;
 }
+
+export interface InstagramMediaItem {
+  id: string;
+  caption?: string | undefined;
+  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+  media_url?: string | undefined;
+  thumbnail_url?: string | undefined;
+  permalink: string;
+  timestamp: string;
+}
+
+export interface MediaResponse {
+  media: InstagramMediaItem[];
+}
+
+export async function fetchAccountMedia(
+  accountId: string,
+  signal?: AbortSignal,
+): Promise<MediaResponse> {
+  return getJSON<MediaResponse>(
+    `/api/accounts/${encodeURIComponent(accountId)}/media`,
+    signal,
+  );
+}

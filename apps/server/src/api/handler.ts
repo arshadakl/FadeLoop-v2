@@ -1,6 +1,7 @@
 import { healthResponse, unavailable } from "@fadeloop/worker-common/http";
 import { apiError } from "../common/http";
 import type { ServerEnvironment } from "../environment";
+import { handleAccountMedia } from "../features/accounts/media";
 import {
   handleInstagramCallback,
   handleInstagramConnect,
@@ -138,6 +139,24 @@ export async function handleApiRequest(
       return await handleAccounts(request, env.DB, Date.now());
     } catch {
       console.error("Account metadata storage unavailable");
+      return unavailable();
+    }
+  }
+
+  // Instagram Account Media (GET /api/accounts/:id/media)
+  const mediaMatch = /^\/api\/accounts\/(\d+)\/media$/.exec(path);
+  if (mediaMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleAccountMedia(
+        request,
+        env,
+        mediaMatch[1],
+        Date.now(),
+        fetch,
+      );
+    } catch (err) {
+      console.error("Account media error:", err);
       return unavailable();
     }
   }

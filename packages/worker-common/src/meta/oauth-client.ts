@@ -72,7 +72,7 @@ async function readObject(
     if (!isRecord(value))
       throw new MetaOAuthError("invalid_response", response.status);
     const match = /"user_id"\s*:\s*"?(\d+)"?/.exec(rawText);
-    if (match && match[1]) {
+    if (match?.[1]) {
       value.user_id = match[1];
     }
     return value;
