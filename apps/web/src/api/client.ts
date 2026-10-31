@@ -8,32 +8,34 @@ export class APIError extends Error {
   }
 }
 
-export async function getJSON(
+export async function getJSON<T = unknown>(
   path: string,
-  signal: AbortSignal,
-): Promise<unknown> {
+  signal?: AbortSignal,
+): Promise<T> {
   const response = await fetch(path, {
-    signal,
+    ...(signal ? { signal } : {}),
     credentials: "same-origin",
     headers: { accept: "application/json" },
   });
   if (!response.ok)
     throw new APIError(response.status, `Request failed (${response.status}).`);
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
-export async function sendJSON(
+export async function sendJSON<T = unknown>(
   path: string,
-  method: "POST" | "DELETE",
+  method: "POST" | "PUT" | "DELETE",
   body?: unknown,
-): Promise<unknown> {
+  signal?: AbortSignal,
+): Promise<T> {
   const response = await fetch(path, {
     method,
+    ...(signal ? { signal } : {}),
     credentials: "same-origin",
     headers: { accept: "application/json", "content-type": "application/json" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   if (!response.ok)
     throw new APIError(response.status, `Request failed (${response.status}).`);
-  return response.status === 204 ? null : response.json();
+  return (response.status === 204 ? null : response.json()) as Promise<T>;
 }

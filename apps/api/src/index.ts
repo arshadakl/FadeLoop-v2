@@ -3,7 +3,16 @@ import {
   type WorkerEnvironment,
 } from "@fadeloop/worker-common/environment";
 import { healthResponse, unavailable } from "@fadeloop/worker-common/http";
+import {
+  handleInstagramCallback,
+  handleInstagramConnect,
+} from "./features/accounts/oauth";
 import { handleAccounts } from "./features/accounts/routes";
+import {
+  handleCampaignItem,
+  handleCampaigns,
+  handleDeliveries,
+} from "./features/campaigns/routes";
 import { handleOwnerLogin } from "./features/owner/login";
 import { handleOwnerSession } from "./features/owner/routes";
 
@@ -14,17 +23,23 @@ interface ApiEnvironment extends WorkerEnvironment {
   SUPABASE_PUBLISHABLE_KEY?: string;
   OWNER_SUPABASE_USER_ID?: string;
   LOGIN_RATE_LIMITER?: RateLimit;
+  META_APP_ID?: string;
+  META_APP_SECRET?: string;
+  META_REDIRECT_URI?: string;
+  TOKEN_ENCRYPTION_KEY?: string;
 }
 
 export default {
   async fetch(request: Request, env: ApiEnvironment): Promise<Response> {
     if (!isConfiguredEnvironment(env)) return unavailable();
-    if (
-      request.method === "GET" &&
-      new URL(request.url).pathname === "/api/health"
-    )
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (request.method === "GET" && path === "/api/health") {
       return healthResponse("api");
-    const path = new URL(request.url).pathname;
+    }
+
+    // Owner Login
     if (path === "/api/login") {
       if (
         !env.DB ||
@@ -52,6 +67,8 @@ export default {
         return unavailable();
       }
     }
+
+    // Owner Session
     if (path === "/api/session") {
       if (!env.DB || !env.APP_ORIGIN) return unavailable();
       try {
@@ -66,6 +83,69 @@ export default {
         return unavailable();
       }
     }
+
+    // Instagram OAuth Connect
+    if (path === "/api/auth/instagram/connect") {
+      if (
+        !env.DB ||
+        !env.APP_ORIGIN ||
+        !env.META_APP_ID ||
+        !env.META_APP_SECRET ||
+        !env.META_REDIRECT_URI ||
+        !env.TOKEN_ENCRYPTION_KEY
+      )
+        return unavailable();
+      try {
+        return await handleInstagramConnect(
+          request,
+          {
+            DB: env.DB,
+            APP_ORIGIN: env.APP_ORIGIN,
+            META_APP_ID: env.META_APP_ID,
+            META_APP_SECRET: env.META_APP_SECRET,
+            META_REDIRECT_URI: env.META_REDIRECT_URI,
+            TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          },
+          Date.now(),
+        );
+      } catch (err) {
+        console.error("Instagram connect error:", err);
+        return unavailable();
+      }
+    }
+
+    // Instagram OAuth Callback
+    if (path === "/api/auth/instagram/callback") {
+      if (
+        !env.DB ||
+        !env.APP_ORIGIN ||
+        !env.META_APP_ID ||
+        !env.META_APP_SECRET ||
+        !env.META_REDIRECT_URI ||
+        !env.TOKEN_ENCRYPTION_KEY
+      )
+        return unavailable();
+      try {
+        return await handleInstagramCallback(
+          request,
+          {
+            DB: env.DB,
+            APP_ORIGIN: env.APP_ORIGIN,
+            META_APP_ID: env.META_APP_ID,
+            META_APP_SECRET: env.META_APP_SECRET,
+            META_REDIRECT_URI: env.META_REDIRECT_URI,
+            TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          },
+          fetch,
+          Date.now(),
+        );
+      } catch (err) {
+        console.error("Instagram callback error:", err);
+        return unavailable();
+      }
+    }
+
+    // Instagram Accounts metadata
     if (path === "/api/accounts") {
       if (!env.DB) return unavailable();
       try {
@@ -75,6 +155,50 @@ export default {
         return unavailable();
       }
     }
+
+    // Campaigns Collection (GET list, POST create)
+    if (path === "/api/campaigns") {
+      if (!env.DB || !env.APP_ORIGIN) return unavailable();
+      try {
+        return await handleCampaigns(
+          request,
+          { DB: env.DB, APP_ORIGIN: env.APP_ORIGIN },
+          Date.now(),
+        );
+      } catch (err) {
+        console.error("Campaigns collection error:", err);
+        return unavailable();
+      }
+    }
+
+    // Single Campaign Item (PUT status)
+    if (path.startsWith("/api/campaigns/")) {
+      const campaignId = path.slice("/api/campaigns/".length).trim();
+      if (!campaignId || !env.DB || !env.APP_ORIGIN) return unavailable();
+      try {
+        return await handleCampaignItem(
+          request,
+          campaignId,
+          { DB: env.DB, APP_ORIGIN: env.APP_ORIGIN },
+          Date.now(),
+        );
+      } catch (err) {
+        console.error("Campaign item error:", err);
+        return unavailable();
+      }
+    }
+
+    // Deliveries History
+    if (path === "/api/deliveries") {
+      if (!env.DB) return unavailable();
+      try {
+        return await handleDeliveries(request, env.DB, Date.now());
+      } catch (err) {
+        console.error("Deliveries list error:", err);
+        return unavailable();
+      }
+    }
+
     return unavailable();
   },
 } satisfies ExportedHandler<ApiEnvironment>;

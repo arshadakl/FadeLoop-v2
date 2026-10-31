@@ -39,3 +39,21 @@ export const deliveryClaimSchema = z.strictObject({
   claimedAt: z.number().int().nonnegative(),
 });
 export type DeliveryClaim = z.infer<typeof deliveryClaimSchema>;
+
+export const createCampaignInputSchema = z.strictObject({
+  accountId: z.string().min(1).max(256),
+  mediaId: z.string().min(1).max(256),
+  status: campaignStatusSchema.default("published"),
+  matchMode: matchModeSchema.default("exact_keyword"),
+  keywords: z.array(z.string().min(1).max(256)).max(50).default([]),
+  replyTemplate: z.string().min(1).max(1000),
+  resourceUrl: z.string().url().max(2048).nullable().optional(),
+});
+export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
+
+export const updateCampaignStatusInputSchema = z.strictObject({
+  status: campaignStatusSchema,
+});
+export type UpdateCampaignStatusInput = z.infer<
+  typeof updateCampaignStatusInputSchema
+>;
