@@ -71,9 +71,7 @@ afterAll(async () => {
 describe("Visual Media Picker: GET /api/accounts/:id/media", () => {
   it("returns sanitized list of Instagram media items for authenticated owner", async () => {
     const mockFetcher = vi.fn(async (url: string) => {
-      expect(url).toContain(
-        "https://graph.instagram.com/v22.0/17841405793187218/media",
-      );
+      expect(url).toContain("https://graph.instagram.com/me/media");
       expect(url).toContain("access_token=valid-account-token");
       return Response.json({
         data: [

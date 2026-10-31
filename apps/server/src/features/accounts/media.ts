@@ -43,7 +43,7 @@ export async function handleAccountMedia(
   }
 
   try {
-    const url = new URL(`https://graph.instagram.com/v22.0/${accountId}/media`);
+    const url = new URL("https://graph.instagram.com/me/media");
     url.search = new URLSearchParams({
       fields:
         "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp",
@@ -51,20 +51,37 @@ export async function handleAccountMedia(
       access_token: cred.accessToken,
     }).toString();
 
-    const response = await fetcher(url.toString(), {
+    let response = await fetcher(url.toString(), {
       method: "GET",
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) {
-      console.error(
-        `Failed to fetch Instagram media for account ${accountId}: HTTP ${response.status}`,
+      // Fallback: try accountId-specific path if me/media returns 400
+      const fallbackUrl = new URL(
+        `https://graph.instagram.com/${accountId}/media`,
       );
-      return Response.json(
-        { media: [], error: "provider_error" },
-        { status: 502 },
-      );
+      fallbackUrl.search = url.search;
+      const fallbackResponse = await fetcher(fallbackUrl.toString(), {
+        method: "GET",
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => null);
+
+      if (fallbackResponse?.ok) {
+        response = fallbackResponse;
+      } else {
+        const errText = await response.text().catch(() => "");
+        console.error(
+          `Failed to fetch Instagram media for account ${accountId}: HTTP ${response.status}`,
+          errText,
+        );
+        return Response.json(
+          { media: [], error: "provider_error" },
+          { status: 502 },
+        );
+      }
     }
 
     const data = (await response.json()) as { data?: unknown[] };

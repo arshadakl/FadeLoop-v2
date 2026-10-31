@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchAccountMedia, fetchAccounts } from "../api/accounts";
 import {
   createCampaign,
@@ -90,6 +90,13 @@ export default function CampaignsPage() {
   });
 
   const accounts = accountsQuery.data?.accounts || [];
+
+  // Automatically select the first connected account when accounts list arrives
+  useEffect(() => {
+    if (!selectedAccountId && accounts.length > 0 && accounts[0]) {
+      setSelectedAccountId(accounts[0].account_id);
+    }
+  }, [accounts, selectedAccountId]);
 
   return (
     <DashboardLayout>
