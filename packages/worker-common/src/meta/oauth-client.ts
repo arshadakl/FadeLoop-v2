@@ -67,11 +67,17 @@ async function readObject(
       bytes.set(chunk, offset);
       offset += chunk.length;
     }
-    const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
+    const rawText = new TextDecoder().decode(bytes);
+    const value: unknown = JSON.parse(rawText);
     if (!isRecord(value))
       throw new MetaOAuthError("invalid_response", response.status);
+    const match = /"user_id"\s*:\s*"?(\d+)"?/.exec(rawText);
+    if (match && match[1]) {
+      value.user_id = match[1];
+    }
     return value;
-  } catch {
+  } catch (err) {
+    if (err instanceof MetaOAuthError) throw err;
     throw new MetaOAuthError("invalid_response", response.status);
   } finally {
     reader.releaseLock();
@@ -85,24 +91,31 @@ function tokenFrom(value: Record<string, unknown>): string {
     value.access_token.length > 16_384
   )
     throw new MetaOAuthError("invalid_response");
-  return value.access_token;
+  return value.access_token.trim();
 }
 
 function expiryFrom(value: Record<string, unknown>): number {
-  if (
-    typeof value.expires_in !== "number" ||
-    !Number.isSafeInteger(value.expires_in) ||
-    value.expires_in <= 0
-  )
-    throw new MetaOAuthError("invalid_response");
-  return value.expires_in;
+  const exp = value.expires_in;
+  if (typeof exp === "number" && Number.isFinite(exp) && exp > 0) {
+    return Math.floor(exp);
+  }
+  if (typeof exp === "string" && /^\d+$/.test(exp.trim())) {
+    const parsed = Number(exp.trim());
+    if (Number.isFinite(parsed) && parsed > 0) return Math.floor(parsed);
+  }
+  throw new MetaOAuthError("invalid_response");
 }
 
 export function createInstagramOAuthClient(
   config: OAuthConfiguration,
   fetcher: Fetcher = fetch,
 ) {
-  checkConfiguration(config);
+  const sanitizedConfig: OAuthConfiguration = {
+    appId: config.appId.trim(),
+    appSecret: config.appSecret.trim(),
+    redirectUri: config.redirectUri.trim(),
+  };
+  checkConfiguration(sanitizedConfig);
 
   async function request(
     url: URL,
@@ -139,8 +152,8 @@ export function createInstagramOAuthClient(
         throw new Error("Invalid OAuth state");
       const url = new URL("https://www.instagram.com/oauth/authorize");
       url.search = new URLSearchParams({
-        client_id: config.appId,
-        redirect_uri: config.redirectUri,
+        client_id: sanitizedConfig.appId,
+        redirect_uri: sanitizedConfig.redirectUri,
         response_type: "code",
         scope: instagramScopes.join(","),
         state,
@@ -150,10 +163,10 @@ export function createInstagramOAuthClient(
     async exchangeCode(code: string) {
       if (!code || code.length > 8192) throw new Error("Invalid OAuth code");
       const body = new URLSearchParams({
-        client_id: config.appId,
-        client_secret: config.appSecret,
+        client_id: sanitizedConfig.appId,
+        client_secret: sanitizedConfig.appSecret,
         grant_type: "authorization_code",
-        redirect_uri: config.redirectUri,
+        redirect_uri: sanitizedConfig.redirectUri,
         code,
       });
       const value = await request(
@@ -165,16 +178,19 @@ export function createInstagramOAuthClient(
         },
       );
       const identity = value.user_id;
-      if (
-        !(typeof identity === "string" && /^\d+$/.test(identity)) &&
-        !(
-          typeof identity === "number" &&
-          Number.isSafeInteger(identity) &&
-          identity > 0
-        )
-      )
+      let userId: string;
+      if (typeof identity === "string" && /^\d+$/.test(identity)) {
+        userId = identity;
+      } else if (
+        typeof identity === "number" &&
+        Number.isFinite(identity) &&
+        identity > 0
+      ) {
+        userId = String(BigInt(Math.floor(identity)));
+      } else {
         throw new MetaOAuthError("invalid_response");
-      return { accessToken: tokenFrom(value), userId: String(identity) };
+      }
+      return { accessToken: tokenFrom(value), userId };
     },
     async exchangeLongLivedToken(shortToken: string) {
       if (!shortToken || shortToken.length > 16_384)
@@ -182,7 +198,7 @@ export function createInstagramOAuthClient(
       const url = new URL("https://graph.instagram.com/access_token");
       url.search = new URLSearchParams({
         grant_type: "ig_exchange_token",
-        client_secret: config.appSecret,
+        client_secret: sanitizedConfig.appSecret,
         access_token: shortToken,
       }).toString();
       const value = await request(url);
