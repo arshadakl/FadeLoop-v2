@@ -1,0 +1,16 @@
+{
+  "name": "@fadeloop/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.local.jsonc --port 8787 --local",
+    "db:migrate": "wrangler d1 migrations apply DB --local --config wrangler.local.jsonc",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "wrangler deploy --dry-run --env test --outdir dist"
+  },
+  "dependencies": {
+    "@fadeloop/contracts": "workspace:*",
+    "@fadeloop/domain": "workspace:*",
+    "@fadeloop/worker-common": "workspace:*"
+  }
+}

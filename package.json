@@ -7,10 +7,11 @@
     "node": ">=22.23.0"
   },
   "scripts": {
-    "db:migrate": "pnpm --filter @fadeloop/api db:migrate",
-    "owner:provision": "node --env-file-if-exists=.env --env-file-if-exists=apps/api/.dev.vars scripts/provision-local-owner.mjs",
+    "db:migrate": "pnpm --filter @fadeloop/server db:migrate",
+    "owner:provision": "node --env-file-if-exists=.env --env-file-if-exists=apps/server/.dev.vars --env-file-if-exists=apps/api/.dev.vars scripts/provision-local-owner.mjs",
     "dev": "pnpm --filter @fadeloop/web dev",
-    "dev:api": "pnpm --filter @fadeloop/api dev",
+    "dev:server": "pnpm --filter @fadeloop/server dev",
+    "dev:api": "pnpm --filter @fadeloop/server dev",
     "lint": "biome check . && node scripts/check-boundaries.mjs",
     "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.tools.json && pnpm -r typecheck",
@@ -19,7 +20,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "hooks:install": "git config core.hooksPath .githooks",
     "commits:check": "node scripts/check-commits.mjs",
-    "meta:check": "node --experimental-strip-types --env-file-if-exists=.env --env-file-if-exists=apps/api/.dev.vars scripts/meta-readiness.mjs"
+    "meta:check": "node --experimental-strip-types --env-file-if-exists=.env --env-file-if-exists=apps/server/.dev.vars --env-file-if-exists=apps/api/.dev.vars scripts/meta-readiness.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

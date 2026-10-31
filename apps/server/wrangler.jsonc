@@ -1,0 +1,87 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "fadeloop",
+  "account_id": "d2d71c52d0381df127528c8919382eb7",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "APP_ENV": "production"
+  },
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fadeloop-d1",
+      "database_id": "73463ef9-fe20-414f-b132-d3e4e9f80e73",
+      "migrations_dir": "../../schema"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "INCOMING_EVENTS_QUEUE",
+        "queue": "fadeloop-incoming-events"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "fadeloop-incoming-events",
+        "max_batch_size": 1,
+        "max_batch_timeout": 0,
+        "max_retries": 5,
+        "dead_letter_queue": "fadeloop-incoming-events-dlq"
+      }
+    ]
+  },
+  "ratelimits": [
+    {
+      "name": "LOGIN_RATE_LIMITER",
+      "namespace_id": "10301",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ],
+  "env": {
+    "test": {
+      "name": "fadeloop-test",
+      "vars": { "APP_ENV": "test" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "fadeloop-d1",
+          "database_id": "73463ef9-fe20-414f-b132-d3e4e9f80e73",
+          "migrations_dir": "../../schema"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "INCOMING_EVENTS_QUEUE",
+            "queue": "fadeloop-incoming-events"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "fadeloop-incoming-events",
+            "max_batch_size": 1,
+            "max_batch_timeout": 0,
+            "max_retries": 5,
+            "dead_letter_queue": "fadeloop-incoming-events-dlq"
+          }
+        ]
+      },
+      "ratelimits": [
+        {
+          "name": "LOGIN_RATE_LIMITER",
+          "namespace_id": "10301",
+          "simple": { "limit": 5, "period": 60 }
+        }
+      ]
+    }
+  }
+}

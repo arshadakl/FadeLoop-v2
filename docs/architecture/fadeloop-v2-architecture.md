@@ -110,21 +110,28 @@ Publishing a multi-event envelope can partially succeed. A later Meta retry can 
 ## 5. Execution architecture
 
 ```mermaid
-flowchart LR
-  IG[Meta webhooks] --> I[Ingress Worker: authenticate and normalize]
-  I --> Q[Cloudflare Queue: external events]
-  Q --> C[Consumer Worker: match and execute]
+flowchart TD
+  subgraph PublicEndpoints["Single Deployed Host (fadeloop.<account>.workers.dev)"]
+    direction TB
+    UI[Creator Browser] -->|Static assets / SPA| ASSETS[Workers Static Assets]
+    UI -->|/api/*| API[API Router: auth & campaigns]
+    IG[Meta webhooks] -->|POST /webhook| I[Ingress Router: verify & enqueue]
+  end
+
+  I --> Q[Cloudflare Queue: fadeloop-incoming-events]
+  Q -->|Asynchronous Batch Invocation| C[Queue Consumer Handler: queue()]
   C --> DB[(D1: accounts, campaigns, deliveries)]
-  C --> M[Meta adapter]
-  C --> F[(Optional flow state)]
-  Q --> DLQ[Dead-letter queue and alert]
-  UI[Creator dashboard] --> API[API Worker: auth and configuration]
+  C --> M[Meta Graph API: Private Reply]
   API --> DB
+  Q -.->|Poison / exhausted retries| DLQ[Dead-letter queue: dlq]
 ```
 
-Use three deployment entry points in one TypeScript repository. They are narrow runtime boundaries, not an invitation to build a large microservice system. The dashboard uses React, Vite, TypeScript, Tailwind CSS, shadcn/ui, and TanStack Query. The ingress bundle should not import UI authentication, reporting, or a generic workflow engine. Sections 10–12 define frontend, design, and Worker code standards.
+FadeLoop V2 unifies deployment into a single Cloudflare Worker (`fadeloop`) that exports both `fetch` (HTTP) and `queue` (Queue Consumer) handlers while serving the Vite React dashboard via Cloudflare Workers Static Assets.
 
-Queues carries the actual normalized event. D1 stores configuration, delivery outcomes, and required conversation state. There is no normal `work_tasks` table, per-minute discovery loop, or automatic comment polling.
+**Guardrail & Invocations Isolation (`CPU-01`)**:
+In Cloudflare Workers, `fetch` and `queue` execute in separate runtime invocations with independent 10 ms CPU clocks. Ingress (`POST /webhook`) solely verifies the HMAC signature and durably enqueues to Cloudflare Queues (< 3 ms active CPU). Delivery matching, atomic claims, and external Meta Graph API calls execute asynchronously in the `queue` handler (< 5 ms active CPU). The dashboard uses React, Vite, TypeScript, Tailwind CSS, shadcn/ui, and TanStack Query, served directly from Cloudflare's edge cache (0 ms Worker CPU).
+
+Queues carries the actual normalized event. D1 stores configuration, delivery outcomes, and required conversation state. There is no `work_tasks` table, per-minute discovery loop, or automatic comment polling.
 
 Start with batch size one for profiling and per-message acknowledgment. Increase batching only after measurements show room. Queues is at-least-once and does not guarantee event order, so duplicate protection and explicit flow concurrency rules are required. [Delivery guarantees](https://developers.cloudflare.com/queues/reference/delivery-guarantees/), [Queue behavior](https://developers.cloudflare.com/queues/reference/how-queues-works/)
 
@@ -251,12 +258,11 @@ apps/
     hooks/common/              # General hooks used across features
     lib/                       # Small focused utilities such as cn()
     styles/                    # Tokens, typography, global styles
-  api/src/                     # Dashboard API Worker
-    routes/
-    features/                  # Feature services and focused D1 access modules
-    common/                    # Shared HTTP errors, auth helpers, request context
-  ingress/src/                 # Signature verification, parsing, enqueueing
-  consumer/src/                # Matching and delivery orchestration
+  server/src/                  # Unified Server Worker (fadeloop: static assets + router + queue consumer)
+    index.ts                   # Unified Worker entrypoint (fetch and queue exports)
+    routes/                    # HTTP route handlers: ingress (/webhook), api (/api/*), health
+    features/                  # Feature services (accounts, campaigns, owner auth) and D1 storage
+    consumer/                  # Asynchronous queue consumer processor (matching & delivery)
 packages/
   contracts/src/               # Browser-safe request/response and event schemas
   domain/src/                  # Pure matching, eligibility, and delivery rules

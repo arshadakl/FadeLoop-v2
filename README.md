@@ -25,8 +25,8 @@ This runs lint/boundary checks, TypeScript, real local D1 integration tests, Vit
 
 ## Repository map
 
-- `apps/web`: React, Tailwind, shadcn-style primitives, TanStack Query, lazy page routing.
-- `apps/api`, `apps/ingress`, `apps/consumer`: independently bundled Worker entry points.
+- `apps/web`: React, Tailwind, shadcn-style primitives, TanStack Query, lazy page routing (SPA output deployed as Workers Static Assets).
+- `apps/server`: Unified Cloudflare Worker (`fadeloop`) managing static assets, webhook ingress (`/webhook`), API (`/api/*`), and asynchronous Queue consumer (`queue()`).
 - `packages/contracts`: browser-safe Zod schemas and inferred transport types.
 - `packages/domain`: pure delivery types and clock seam.
 - `packages/worker-common`: narrowly exported server-only HTTP/logging helpers.
