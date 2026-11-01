@@ -26,12 +26,12 @@ export default function AccountsPage() {
     <DashboardLayout>
       <div className="space-y-8 font-sans">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#EDEEEC]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#212121]">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Instagram Accounts
             </h1>
-            <p className="text-sm text-[#5D686A] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Connect and manage Instagram professional or creator accounts for
               automated direct replies.
             </p>
@@ -53,7 +53,7 @@ export default function AccountsPage() {
 
         {/* Notifications */}
         {isConnectedNotice && (
-          <div className="p-3.5 rounded bg-[#ECFDF5] border border-[#A7F3D0] text-[#047857] text-sm flex items-center justify-between">
+          <div className="p-3.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-center justify-between">
             <span>
               ✓ Instagram account connected successfully! 60-day long-lived
               access token is sealed at rest.
@@ -62,7 +62,7 @@ export default function AccountsPage() {
         )}
 
         {errorMessage && (
-          <div className="p-3.5 rounded bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-sm">
+          <div className="p-3.5 rounded bg-destructive/10 border border-destructive/20 text-destructive text-sm">
             Failed to connect Instagram account ({errorMessage}). Please verify
             Meta app settings and try again.
           </div>
@@ -70,27 +70,27 @@ export default function AccountsPage() {
 
         {/* Account List */}
         <div className="space-y-4">
-          <h2 className="text-base font-semibold text-[#212121]">
+          <h2 className="text-base font-semibold text-foreground">
             Connected Accounts
           </h2>
 
           {accountsQuery.isPending ? (
-            <div className="p-8 text-center text-sm text-[#5D686A] bg-white rounded border border-[#EDEEEC]">
+            <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded border border-border">
               Loading connected accounts…
             </div>
           ) : accountsQuery.isError ? (
-            <div className="p-8 text-center text-sm text-[#B91C1C] bg-[#FEF2F2] rounded border border-[#FECACA]">
+            <div className="p-8 text-center text-sm text-destructive bg-destructive/10 rounded border border-destructive/20">
               Failed to load accounts. Please check your session.
             </div>
           ) : accountsQuery.data.accounts.length === 0 ? (
-            <div className="p-12 text-center bg-white rounded border border-dashed border-[#EDEEEC]">
-              <div className="w-10 h-10 rounded bg-[#212121] text-white font-bold flex items-center justify-center mx-auto mb-3 text-sm">
+            <div className="p-12 text-center bg-card rounded border border-dashed border-border">
+              <div className="w-10 h-10 rounded bg-foreground text-background font-bold flex items-center justify-center mx-auto mb-3 text-sm">
                 IG
               </div>
-              <h3 className="font-semibold text-base text-[#212121]">
+              <h3 className="font-semibold text-base text-foreground">
                 No Instagram Accounts Connected
               </h3>
-              <p className="text-sm text-[#5D686A] max-w-md mx-auto mt-1 mb-5">
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mt-1 mb-5">
                 Connect your professional or creator account to enable keyword
                 triggers and automated replies.
               </p>
@@ -120,28 +120,28 @@ export default function AccountsPage() {
                 return (
                   <div
                     key={acc.account_id}
-                    className="p-4 bg-white rounded border border-[#EDEEEC] flex items-center justify-between shadow-2xs"
+                    className="p-4 bg-card rounded border border-border flex items-center justify-between shadow-2xs"
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="w-9 h-9 rounded bg-[#212121] flex items-center justify-center font-bold text-xs text-white">
+                      <div className="w-9 h-9 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs">
                         IG
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm text-[#212121]">
+                          <span className="font-semibold text-sm text-foreground">
                             ID: {acc.account_id}
                           </span>
                           <span
                             className={`text-xs px-2 py-0.2 rounded font-medium ${
                               acc.status === "connected" && !isExpired
-                                ? "bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]"
-                                : "bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA]"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                : "bg-destructive/10 text-destructive border border-destructive/20"
                             }`}
                           >
                             {isExpired ? "Token Expired" : acc.status}
                           </span>
                         </div>
-                        <p className="text-xs text-[#5D686A] mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {isExpired
                             ? "Reconnection required to resume automated replies"
                             : `Token active · ${daysRemaining} days remaining (auto-refreshed nightly)`}

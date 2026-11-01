@@ -21,7 +21,7 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Immediate next action | Live end-to-end verification with Meta App Tester account commenting on live Reel |
 | Current blockers | Meta App must be in Live mode OR commenting account must be registered in App Roles -> Testers |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 012afefb-e2a6-4f3d-b779-1715dc1d016b |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version b150cc2c-1aef-455b-9d7c-5c971cdfa945 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
