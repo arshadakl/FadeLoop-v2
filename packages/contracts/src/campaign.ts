@@ -63,3 +63,15 @@ export const updateCampaignStatusInputSchema = z.strictObject({
 export type UpdateCampaignStatusInput = z.infer<
   typeof updateCampaignStatusInputSchema
 >;
+
+export const updateCampaignInputSchema = z.strictObject({
+  status: campaignStatusSchema.optional(),
+  matchMode: matchModeSchema.optional(),
+  keywords: z.array(z.string().min(1).max(256)).max(50).optional(),
+  replyTemplate: z.string().min(1).max(1000).optional(),
+  resourceUrl: z.string().url().max(2048).nullable().optional(),
+  confirmationButtonEnabled: z.boolean().optional(),
+  confirmationButtonText: z.string().min(1).max(20).optional(),
+  confirmationPromptText: z.string().max(1000).nullable().optional(),
+});
+export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;

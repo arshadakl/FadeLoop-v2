@@ -1,4 +1,7 @@
-import type { CreateCampaignInput } from "@fadeloop/contracts/campaign";
+import type {
+  CreateCampaignInput,
+  UpdateCampaignInput,
+} from "@fadeloop/contracts/campaign";
 import { getJSON, sendJSON } from "./client";
 
 export interface CampaignData {
@@ -68,6 +71,36 @@ export async function toggleCampaignStatus(
     `/api/campaigns/${campaignId}`,
     "PUT",
     { status },
+    signal,
+  );
+}
+
+export async function updateCampaign(
+  campaignId: string,
+  input: UpdateCampaignInput,
+  signal?: AbortSignal,
+): Promise<{
+  success: boolean;
+  status: string;
+  campaign: CampaignData["campaign"];
+  revision: CampaignData["revision"];
+}> {
+  return sendJSON<{
+    success: boolean;
+    status: string;
+    campaign: CampaignData["campaign"];
+    revision: CampaignData["revision"];
+  }>(`/api/campaigns/${campaignId}`, "PUT", input, signal);
+}
+
+export async function deleteCampaign(
+  campaignId: string,
+  signal?: AbortSignal,
+): Promise<{ success: boolean; id: string }> {
+  return sendJSON<{ success: boolean; id: string }>(
+    `/api/campaigns/${campaignId}`,
+    "DELETE",
+    undefined,
     signal,
   );
 }

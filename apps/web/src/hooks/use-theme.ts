@@ -45,4 +45,3 @@ export function useTheme() {
 
   return { theme, setTheme: setThemeState, toggleTheme };
 }
-

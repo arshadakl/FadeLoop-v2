@@ -15,13 +15,13 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step opt-in Quick Reply flow supported |
 | Database | D1 adeloop-d1 active; migrations 0001, 0002, 0003 applied; owner workspace & interactive revision columns active |
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
-| Tests/builds/deployment | pnpm check PASS, 81 tests across 20 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
+| Tests/builds/deployment | pnpm check PASS, 85 tests across 20 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
 | Active owner | Antigravity: Phase 8 Expansion (Token Refresh, Media Picker, 2-Step Anti-Spam, Notion UI) |
 | Immediate next action | Live end-to-end verification with Meta App Tester account commenting on live Reel |
 | Current blockers | Meta App must be in Live mode OR commenting account must be registered in App Roles -> Testers |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version b150cc2c-1aef-455b-9d7c-5c971cdfa945 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 641f0fd1-9199-4b3b-a379-01e23db4201a |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
