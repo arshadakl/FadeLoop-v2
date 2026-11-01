@@ -8,16 +8,16 @@ import {
   type QueryObserver,
 } from "@fadeloop/worker-common/database";
 
-export interface ActiveCampaignWithRevision {
-  campaign: Campaign;
-  revision: CampaignRevision;
-}
-
 export interface ConnectedAccountData {
   accountId: string;
   workspaceId: string;
   tokenCiphertext: string;
   tokenExpiresAt: number;
+}
+
+export interface ActiveCampaignWithRevision {
+  campaign: Campaign;
+  revision: CampaignRevision;
 }
 
 export type ClaimResult =
@@ -84,6 +84,9 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
         r_keywords_json: string;
         r_reply_template: string;
         r_resource_url: string | null;
+        r_confirmation_button_enabled: number | null;
+        r_confirmation_button_text: string | null;
+        r_confirmation_prompt_text: string | null;
         r_created_at: number;
       }>(
         "campaigns.find_active_for_media",
@@ -95,6 +98,9 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
               c.updated_at AS c_updated_at,
               r.id AS r_id, r.match_mode AS r_match_mode, r.keywords_json AS r_keywords_json,
               r.reply_template AS r_reply_template, r.resource_url AS r_resource_url,
+              r.confirmation_button_enabled AS r_confirmation_button_enabled,
+              r.confirmation_button_text AS r_confirmation_button_text,
+              r.confirmation_prompt_text AS r_confirmation_prompt_text,
               r.created_at AS r_created_at
             FROM campaigns c
             JOIN campaign_revisions r ON r.campaign_id = c.id
@@ -132,6 +138,90 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
           keywords,
           replyTemplate: row.r_reply_template,
           resourceUrl: row.r_resource_url,
+          confirmationButtonEnabled: row.r_confirmation_button_enabled === 1,
+          confirmationButtonText: row.r_confirmation_button_text || "Send Me",
+          confirmationPromptText: row.r_confirmation_prompt_text ?? undefined,
+          createdAt: row.r_created_at,
+        },
+      };
+    },
+
+    /**
+     * Resolves an active published campaign by its unique ID (used for Step 2 DM delivery).
+     */
+    async findActiveCampaignById(
+      campaignId: string,
+    ): Promise<ActiveCampaignWithRevision | null> {
+      const rows = await query<{
+        c_id: string;
+        c_workspace_id: string;
+        c_account_id: string;
+        c_media_id: string;
+        c_status: "published" | "paused";
+        c_created_at: number;
+        c_updated_at: number;
+        r_id: string;
+        r_match_mode: "exact_keyword" | "any_comment";
+        r_keywords_json: string;
+        r_reply_template: string;
+        r_resource_url: string | null;
+        r_confirmation_button_enabled: number | null;
+        r_confirmation_button_text: string | null;
+        r_confirmation_prompt_text: string | null;
+        r_created_at: number;
+      }>(
+        "campaigns.find_active_by_id",
+        db
+          .prepare(
+            `SELECT
+              c.id AS c_id, c.workspace_id AS c_workspace_id, c.account_id AS c_account_id,
+              c.media_id AS c_media_id, c.status AS c_status, c.created_at AS c_created_at,
+              c.updated_at AS c_updated_at,
+              r.id AS r_id, r.match_mode AS r_match_mode, r.keywords_json AS r_keywords_json,
+              r.reply_template AS r_reply_template, r.resource_url AS r_resource_url,
+              r.confirmation_button_enabled AS r_confirmation_button_enabled,
+              r.confirmation_button_text AS r_confirmation_button_text,
+              r.confirmation_prompt_text AS r_confirmation_prompt_text,
+              r.created_at AS r_created_at
+            FROM campaigns c
+            JOIN campaign_revisions r ON r.campaign_id = c.id
+            WHERE c.id = ? AND c.status = 'published'
+            ORDER BY r.created_at DESC
+            LIMIT 1`,
+          )
+          .bind(campaignId),
+      );
+
+      const row = rows[0];
+      if (!row) return null;
+
+      let keywords: string[] = [];
+      try {
+        keywords = JSON.parse(row.r_keywords_json);
+      } catch {
+        keywords = [];
+      }
+
+      return {
+        campaign: {
+          id: row.c_id,
+          workspaceId: row.c_workspace_id,
+          accountId: row.c_account_id,
+          mediaId: row.c_media_id,
+          status: row.c_status,
+          createdAt: row.c_created_at,
+          updatedAt: row.c_updated_at,
+        },
+        revision: {
+          id: row.r_id,
+          campaignId: row.c_id,
+          matchMode: row.r_match_mode,
+          keywords,
+          replyTemplate: row.r_reply_template,
+          resourceUrl: row.r_resource_url,
+          confirmationButtonEnabled: row.r_confirmation_button_enabled === 1,
+          confirmationButtonText: row.r_confirmation_button_text || "Send Me",
+          confirmationPromptText: row.r_confirmation_prompt_text ?? undefined,
           createdAt: row.r_created_at,
         },
       };

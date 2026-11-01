@@ -47,6 +47,13 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0003 = await readFile(
+    new URL(
+      "../../../../../schema/0003_campaign_confirmation_flow.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -64,6 +71,7 @@ beforeAll(async () => {
 
   await applySql(sql0001);
   await applySql(sql0002);
+  await applySql(sql0003);
 
   // Setup workspace, account, and owner session
   await db

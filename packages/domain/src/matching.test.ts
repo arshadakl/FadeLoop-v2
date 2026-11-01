@@ -14,6 +14,8 @@ describe("Comment campaign matching", () => {
     keywords: ["price", "link", "coupon"],
     replyTemplate: "Here is your link!",
     resourceUrl: "https://example.com/link",
+    confirmationButtonEnabled: false,
+    confirmationButtonText: "Send Me",
     createdAt: 1000,
   };
 

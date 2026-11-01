@@ -18,6 +18,9 @@ export interface CampaignData {
     keywords: string[];
     replyTemplate: string;
     resourceUrl?: string | null;
+    confirmationButtonEnabled?: boolean;
+    confirmationButtonText?: string;
+    confirmationPromptText?: string | null;
     createdAt: number;
   };
 }

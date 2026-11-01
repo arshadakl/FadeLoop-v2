@@ -55,6 +55,12 @@ export async function handleWebhookRequest(
     const token = url.searchParams.get("hub.verify_token");
     const challenge = url.searchParams.get("hub.challenge");
 
+    console.log(
+      `[Ingress] GET /webhook handshake request received. mode=${mode}, tokenMatched=${Boolean(
+        token && token === env.META_WEBHOOK_VERIFY_TOKEN,
+      )}`,
+    );
+
     if (
       mode === "subscribe" &&
       env.META_WEBHOOK_VERIFY_TOKEN &&
@@ -63,6 +69,7 @@ export async function handleWebhookRequest(
       challenge.length <= 256 &&
       /^[a-zA-Z0-9_.-]+$/.test(challenge)
     ) {
+      console.log("[Ingress] Handshake verified. Responding with challenge.");
       return new Response(challenge, {
         status: 200,
         headers: {
@@ -72,6 +79,7 @@ export async function handleWebhookRequest(
       });
     }
 
+    console.warn("[Ingress] Handshake verification rejected (403 Forbidden).");
     return new Response("Forbidden", {
       status: 403,
       headers: { "cache-control": "no-store" },
@@ -81,17 +89,28 @@ export async function handleWebhookRequest(
   // 2. POST: Inbound webhook event notifications
   if (request.method === "POST") {
     if (!env.META_WEBHOOK_SIGNING_SECRET || !env.INCOMING_EVENTS_QUEUE) {
+      console.error(
+        "[Ingress] Server misconfiguration: missing META_WEBHOOK_SIGNING_SECRET or INCOMING_EVENTS_QUEUE",
+      );
       return unavailable();
     }
 
     const signature = request.headers.get("x-hub-signature-256");
+    console.log(
+      `[Ingress] Inbound POST /webhook. x-hub-signature-256: ${
+        signature ? "present" : "missing"
+      }`,
+    );
+
     if (!signature) {
+      console.warn("[Ingress] Missing x-hub-signature-256 header; rejecting.");
       return new Response("Unauthorized", { status: 401 });
     }
 
     // Streaming bounded raw body read (immune to chunked memory inflation)
     const rawBuffer = await readBoundedBuffer(request, MAX_BODY_BYTES);
     if (!rawBuffer) {
+      console.warn("[Ingress] Request body exceeds MAX_BODY_BYTES; rejecting.");
       return new Response("Payload Too Large", { status: 413 });
     }
 
@@ -103,6 +122,9 @@ export async function handleWebhookRequest(
     );
 
     if (!isValid) {
+      console.warn(
+        "[Ingress] Signature mismatch on raw body; rejecting (401 Unauthorized).",
+      );
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -112,16 +134,24 @@ export async function handleWebhookRequest(
       const text = new TextDecoder().decode(rawBuffer);
       payload = JSON.parse(text);
     } catch {
+      console.warn("[Ingress] JSON parse failed on authenticated body.");
       return new Response("Bad Request", { status: 400 });
     }
 
     const events = normalizeWebhookPayload(payload, Date.now());
+    console.log(
+      `[Ingress] Normalized ${events.length} event(s):`,
+      events.map((e) => `${e.kind}:${e.providerEventKey}`).join(", "),
+    );
 
     // Publish to Cloudflare Queue if actionable events exist
     if (events.length > 0) {
       try {
         await env.INCOMING_EVENTS_QUEUE.sendBatch(
           events.map((event) => ({ body: event })),
+        );
+        console.log(
+          `[Ingress] Successfully enqueued ${events.length} event(s)`,
         );
       } catch (err) {
         console.error(

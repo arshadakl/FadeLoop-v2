@@ -67,6 +67,9 @@ export async function handleCampaigns(
       keywords,
       replyTemplate,
       resourceUrl,
+      confirmationButtonEnabled,
+      confirmationButtonText,
+      confirmationPromptText,
     } = parsed.data;
 
     // Normalize keywords to lowercase
@@ -86,6 +89,9 @@ export async function handleCampaigns(
           matchMode,
           keywords: normalizedKeywords,
           replyTemplate,
+          confirmationButtonEnabled,
+          confirmationButtonText,
+          confirmationPromptText,
           ...(resourceUrl !== undefined ? { resourceUrl } : {}),
         },
         now,

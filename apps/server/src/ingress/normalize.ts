@@ -104,6 +104,9 @@ export function normalizeWebhookPayload(
           typeof val.from?.id === "string" &&
           val.from.id.trim() === accountId
         ) {
+          console.log(
+            `[Ingress] Skipped self-comment from account owner (${accountId}) on comment ${commentId}`,
+          );
           continue;
         }
 

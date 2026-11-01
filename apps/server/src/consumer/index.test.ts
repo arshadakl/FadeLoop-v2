@@ -32,6 +32,13 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0003 = await readFile(
+    new URL(
+      "../../../../schema/0003_campaign_confirmation_flow.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -49,6 +56,7 @@ beforeAll(async () => {
 
   await applySql(sql0001);
   await applySql(sql0002);
+  await applySql(sql0003);
 
   // Set up workspace & connected Instagram account with encrypted token
   await db
@@ -366,5 +374,116 @@ describe("Consumer Queue message processing", () => {
       .bind("ig_acc_consumer:c_timeout")
       .first<{ status: string }>();
     expect(outcome?.status).toBe("unknown");
+  });
+
+  it("Step 1: dispatches interactive 'Send Me' quick-reply button when confirmation_button_enabled is true", async () => {
+    // Insert interactive campaign
+    await db
+      .prepare(
+        `INSERT INTO campaigns (id, workspace_id, account_id, media_id, status, created_at, updated_at)
+         VALUES ('camp_interactive', 'ws_consumer', 'ig_acc_consumer', 'media_reel_interactive', 'published', ?, ?)`,
+      )
+      .bind(now, now)
+      .run();
+
+    await db
+      .prepare(
+        `INSERT INTO campaign_revisions (
+          id, campaign_id, match_mode, keywords_json, reply_template, resource_url,
+          confirmation_button_enabled, confirmation_button_text, confirmation_prompt_text, created_at
+        ) VALUES ('rev_interactive', 'camp_interactive', 'exact_keyword', '["link"]', 'Here is your link!', 'https://site.com', 1, 'Send Me', 'Tap below to receive your link 👇', ?)`,
+      )
+      .bind(now)
+      .run();
+
+    const event: AutomationEvent = {
+      schemaVersion: 1,
+      kind: "comment.created",
+      accountId: "ig_acc_consumer",
+      providerEventKey: "comment:c_interactive_1",
+      mediaId: "media_reel_interactive",
+      commentId: "c_interactive_1",
+      text: "send link",
+      occurredAt: now,
+      receivedAt: now,
+    };
+
+    let dispatchedPayload: unknown;
+    const mockFetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      dispatchedPayload = JSON.parse(String(init?.body));
+      return Response.json({ message_id: "meta_msg_step1" });
+    });
+
+    const { message, ack } = createMockMessage(event);
+    await processQueueMessage(
+      message,
+      { ...env, DB: db },
+      mockFetcher as unknown as typeof fetch,
+      now,
+    );
+
+    expect(mockFetcher).toHaveBeenCalledTimes(1);
+    expect(ack).toHaveBeenCalledTimes(1);
+
+    const payload = dispatchedPayload as {
+      recipient: { comment_id: string };
+      message: {
+        text: string;
+        quick_replies?: Array<{ title: string; payload: string }>;
+      };
+    };
+    expect(payload.recipient.comment_id).toBe("c_interactive_1");
+    expect(payload.message.text).toBe("Tap below to receive your link 👇");
+    expect(payload.message.quick_replies).toHaveLength(1);
+    expect(payload.message.quick_replies?.[0]?.title).toBe("Send Me");
+    expect(payload.message.quick_replies?.[0]?.payload).toBe(
+      "step2:camp_interactive:c_interactive_1",
+    );
+  });
+
+  it("Step 2: delivers target resource when user taps 'Send Me' quick-reply button", async () => {
+    const postbackEvent: AutomationEvent = {
+      schemaVersion: 1,
+      kind: "postback.received",
+      accountId: "ig_acc_consumer",
+      providerEventKey: "postback:mid_btn_click",
+      messagingUserId: "ig_user_commenter_888",
+      interactionPayload: "step2:camp_interactive:c_interactive_1",
+      occurredAt: now,
+      receivedAt: now,
+    };
+
+    let dispatchedPayload: unknown;
+    const mockFetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      dispatchedPayload = JSON.parse(String(init?.body));
+      return Response.json({ message_id: "meta_msg_step2" });
+    });
+
+    const { message, ack } = createMockMessage(postbackEvent);
+    await processQueueMessage(
+      message,
+      { ...env, DB: db },
+      mockFetcher as unknown as typeof fetch,
+      now,
+    );
+
+    expect(mockFetcher).toHaveBeenCalledTimes(1);
+    expect(ack).toHaveBeenCalledTimes(1);
+
+    const payload = dispatchedPayload as {
+      recipient: { id: string };
+      message: { text: string };
+    };
+    expect(payload.recipient.id).toBe("ig_user_commenter_888");
+    expect(payload.message.text).toContain("Here is your link!");
+    expect(payload.message.text).toContain("https://site.com");
+
+    // Verify atomic claim & outcome recorded
+    const outcome = await db
+      .prepare("SELECT * FROM delivery_outcomes WHERE action_key = ?")
+      .bind("ig_acc_consumer:ig_user_commenter_888:camp_interactive:step2")
+      .first<{ status: string; provider_message_id: string }>();
+    expect(outcome?.status).toBe("sent");
+    expect(outcome?.provider_message_id).toBe("meta_msg_step2");
   });
 });

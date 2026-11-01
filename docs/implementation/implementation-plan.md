@@ -8,20 +8,20 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01–P08 Unified Worker deployed live to Cloudflare; Instagram account connected; Phase 8 expansion next |
-| Current phase | P00–P07 DONE; P08 LIVE (P08-01 to P08-04 DONE); P08-06 to P08-09 NEXT; P09 EXPANDED |
+| Product stage | P01–P08 Unified Worker deployed live to Cloudflare; Notion Light UI + 2-Step Anti-Spam DM Flow Live |
+| Current phase | P00–P07 DONE; P08 LIVE (P08-01 through P08-10 DONE); Live comment testing with Tester Account next |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
-| Application/runtime | Single unified worker (`apps/server`, `fadeloop`) serving assets, API, ingress, queue consumer, and cron |
-| Provider verification | Meta Webhook verified at `/webhook`; Instagram OAuth live connected with 64-bit ID lossless parsing |
-| Database | D1 `fadeloop-d1` active; migrations 0001 & 0002 applied; owner workspace provisioned; account token sealed |
+| Application/runtime | Single unified worker (pps/server, adeloop) serving assets, API, ingress, queue consumer, and cron |
+| Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step opt-in Quick Reply flow supported |
+| Database | D1 adeloop-d1 active; migrations 0001, 0002, 0003 applied; owner workspace & interactive revision columns active |
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
-| Tests/builds/deployment | pnpm check PASS, 75 tests across 18 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
+| Tests/builds/deployment | pnpm check PASS, 81 tests across 20 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Phase 8 Expansion (Token Refresh, Media Picker, 2-Step Anti-Spam, Pacing) |
-| Immediate next action | Implement P08-06 (Automated Token Refresh Cron) and P08-07 (Visual Media Picker API & UI) |
-| Current blockers | None. Ready for P08-06 and P08-07 implementation. |
+| Active owner | Antigravity: Phase 8 Expansion (Token Refresh, Media Picker, 2-Step Anti-Spam, Notion UI) |
+| Immediate next action | Live end-to-end verification with Meta App Tester account commenting on live Reel |
+| Current blockers | Meta App must be in Live mode OR commenting account must be registered in App Roles -> Testers |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version d53f9702-0bb9-48b6-b703-9d0b7c25ef13 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 012afefb-e2a6-4f3d-b779-1715dc1d016b |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 

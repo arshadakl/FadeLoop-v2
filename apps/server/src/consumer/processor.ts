@@ -32,10 +32,10 @@ export function formatReplyText(
  * Processes a single queue message containing an AutomationEvent.
  *
  * Implements strict guardrails:
- * - Direct comment delivery: only comment.created events are processed.
- * - 7-day eligibility window enforced.
- * - Active campaign and keyword match verified.
- * - Atomic D1 claim guarantees idempotent single delivery.
+ * - Direct comment delivery (comment.created) & interactive 2-step opt-in (postback.received / message.received).
+ * - 7-day eligibility window enforced for comment replies.
+ * - Active published campaign and keyword match verified.
+ * - Atomic D1 claim guarantees idempotent single delivery per comment / step.
  * - AES-GCM token decryption.
  * - Meta Graph API dispatch with bounded retries and no blind retries on unknown.
  */
@@ -48,131 +48,334 @@ export async function processQueueMessage(
 ): Promise<void> {
   const event = message.body;
 
-  // 1. Only process comment.created events for private reply
-  if (event.kind !== "comment.created") {
-    message.ack();
-    return;
-  }
+  console.log(
+    `[Consumer] Processing ${event.kind} event for account ${event.accountId}, key: ${event.providerEventKey}`,
+  );
 
-  // 2. Validate prerequisites
+  // 1. Validate required environment bindings
   if (!env.DB || !env.TOKEN_ENCRYPTION_KEY || !env.META_GRAPH_VERSION) {
-    console.error("Consumer worker missing required bindings");
-    message.retry({ delaySeconds: 60 });
-    return;
-  }
-
-  // 3. Enforce Meta 7-day private reply window
-  if (!isCommentWithinReplyWindow(event.occurredAt, now)) {
-    console.info(
-      `Comment ${event.commentId} is outside 7-day eligibility window; dropping.`,
+    console.error(
+      "[Consumer] Missing required bindings (DB, TOKEN_ENCRYPTION_KEY, META_GRAPH_VERSION)",
     );
-    message.ack();
+    message.retry({ delaySeconds: 60 });
     return;
   }
 
   const store = createConsumerStore(env.DB, observer);
 
-  // 4. Look up active published campaign for this post/reel
-  const active = await store.findActiveCampaignForMedia(
-    event.accountId,
-    event.mediaId,
-  );
-  if (!active) {
-    // No active published campaign for this media
-    message.ack();
-    return;
-  }
+  // =========================================================================
+  // SCENARIO A: Comment Created (Step 1 or Direct Reply)
+  // =========================================================================
+  if (event.kind === "comment.created") {
+    // Enforce Meta 7-day private reply window
+    if (!isCommentWithinReplyWindow(event.occurredAt, now)) {
+      console.info(
+        `[Consumer] Comment ${event.commentId} is outside 7-day eligibility window; dropping.`,
+      );
+      message.ack();
+      return;
+    }
 
-  // 5. Test comment text matching
-  if (!matchComment(event.text, active.revision)) {
-    // Comment did not match keyword rules
-    message.ack();
-    return;
-  }
-
-  // 6. Look up connected Instagram account and verify token validity
-  const account = await store.findConnectedAccount(event.accountId);
-  if (!account) {
-    console.warn(
-      `Account ${event.accountId} is not connected or missing token.`,
+    // Look up active published campaign for this post/reel
+    const active = await store.findActiveCampaignForMedia(
+      event.accountId,
+      event.mediaId,
     );
-    message.ack();
-    return;
-  }
+    if (!active) {
+      console.info(
+        `[Consumer] No active published campaign for account ${event.accountId} media ${event.mediaId}`,
+      );
+      message.ack();
+      return;
+    }
 
-  if (account.tokenExpiresAt <= now) {
-    console.warn(`Account ${event.accountId} token has expired.`);
-    message.ack();
-    return;
-  }
+    // Test comment text matching
+    if (!matchComment(event.text, active.revision)) {
+      console.info(
+        `[Consumer] Comment text "${event.text}" did not match keyword rules for campaign ${active.campaign.id}`,
+      );
+      message.ack();
+      return;
+    }
 
-  // 7. Atomic claim in D1: guarantees only 1 delivery per (account_id, comment_id)
-  const actionKey = `${event.accountId}:${event.commentId}`;
-  const claimResult = await store.claimDelivery(
-    {
+    // Look up connected Instagram account and verify token validity
+    const account = await store.findConnectedAccount(event.accountId);
+    if (!account) {
+      console.warn(
+        `[Consumer] Account ${event.accountId} is not connected or missing token.`,
+      );
+      message.ack();
+      return;
+    }
+
+    if (account.tokenExpiresAt <= now) {
+      console.warn(`[Consumer] Account ${event.accountId} token has expired.`);
+      message.ack();
+      return;
+    }
+
+    const isConfirmationEnabled =
+      active.revision.confirmationButtonEnabled === true;
+    const actionKey = `${event.accountId}:${event.commentId}`;
+
+    // Atomic claim in D1: guarantees only 1 delivery per (account_id, comment_id)
+    const claimResult = await store.claimDelivery(
+      {
+        actionKey,
+        workspaceId: active.campaign.workspaceId,
+        accountId: event.accountId,
+        commentId: event.commentId,
+        mediaId: event.mediaId,
+        campaignId: active.campaign.id,
+        revisionId: active.revision.id,
+        claimedAt: now,
+      },
+      message.attempts,
+    );
+
+    if (claimResult.status === "already_settled") {
+      console.info(`[Consumer] Action ${actionKey} already settled; skipping.`);
+      message.ack();
+      return;
+    }
+
+    // Decrypt account access token
+    let accessToken: string;
+    try {
+      const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
+      accessToken = await vault.open(account.tokenCiphertext, event.accountId);
+    } catch (err) {
+      console.error("[Consumer] Failed to decrypt account token:", err);
+      await store.recordOutcome({
+        id: crypto.randomUUID(),
+        actionKey,
+        workspaceId: active.campaign.workspaceId,
+        accountId: event.accountId,
+        status: "failed",
+        errorCode: "TOKEN_DECRYPT_FAIL",
+        attemptCount: message.attempts,
+        occurredAt: now,
+      });
+      message.ack();
+      return;
+    }
+
+    // Dispatch message via Meta Graph API
+    let result: Awaited<ReturnType<typeof sendInstagramPrivateReply>>;
+
+    if (isConfirmationEnabled) {
+      // Step 1: Send interactive Quick Reply "Send Me" button prompt
+      const promptText =
+        active.revision.confirmationPromptText?.trim() ||
+        "Tap below to receive your link 👇";
+      const buttonTitle = (
+        active.revision.confirmationButtonText?.trim() || "Send Me"
+      ).slice(0, 20);
+
+      console.log(
+        `[Consumer] Dispatching Step 1 interactive prompt ("${buttonTitle}") to comment ${event.commentId}`,
+      );
+
+      result = await sendInstagramPrivateReply(
+        {
+          graphVersion: env.META_GRAPH_VERSION,
+          accountId: event.accountId,
+          accessToken,
+          commentId: event.commentId,
+          text: promptText,
+          quickReplies: [
+            {
+              content_type: "text",
+              title: buttonTitle,
+              payload: `step2:${active.campaign.id}:${event.commentId}`,
+            },
+          ],
+        },
+        fetcher,
+      );
+    } else {
+      // Direct Reply mode: send promised resource directly
+      const replyText = formatReplyText(
+        active.revision.replyTemplate,
+        active.revision.resourceUrl,
+      );
+
+      console.log(
+        `[Consumer] Dispatching direct private reply to comment ${event.commentId}`,
+      );
+
+      result = await sendInstagramPrivateReply(
+        {
+          graphVersion: env.META_GRAPH_VERSION,
+          accountId: event.accountId,
+          accessToken,
+          commentId: event.commentId,
+          text: replyText,
+        },
+        fetcher,
+      );
+    }
+
+    // Record outcome and settle queue message
+    return settleOutcome(
+      result,
+      store,
+      message,
       actionKey,
-      workspaceId: active.campaign.workspaceId,
-      accountId: event.accountId,
-      commentId: event.commentId,
-      mediaId: event.mediaId,
-      campaignId: active.campaign.id,
-      revisionId: active.revision.id,
-      claimedAt: now,
-    },
-    message.attempts,
-  );
-
-  if (claimResult.status === "already_settled") {
-    // Already claimed or settled by another concurrent or prior worker
-    message.ack();
-    return;
+      active.campaign.workspaceId,
+      event.accountId,
+      now,
+    );
   }
 
-  // 8. Decrypt account access token
-  let accessToken: string;
-  try {
-    const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
-    accessToken = await vault.open(account.tokenCiphertext, event.accountId);
-  } catch (err) {
-    console.error("Failed to decrypt account token:", err);
-    await store.recordOutcome({
-      id: crypto.randomUUID(),
+  // =========================================================================
+  // SCENARIO B: User Clicked "Send Me" Quick Reply (Step 2 Resource Delivery)
+  // =========================================================================
+  if (
+    (event.kind === "postback.received" || event.kind === "message.received") &&
+    event.interactionPayload &&
+    event.interactionPayload.startsWith("step2:") &&
+    event.messagingUserId
+  ) {
+    const parts = event.interactionPayload.split(":");
+    const campaignId = parts[1];
+    const _originalCommentId = parts[2] || "unknown";
+
+    if (!campaignId) {
+      console.warn(
+        "[Consumer] Malformed step2 payload:",
+        event.interactionPayload,
+      );
+      message.ack();
+      return;
+    }
+
+    console.log(
+      `[Consumer] Processing Step 2 opt-in click from user ${event.messagingUserId} for campaign ${campaignId}`,
+    );
+
+    const active = await store.findActiveCampaignById(campaignId);
+    if (!active || active.campaign.accountId !== event.accountId) {
+      console.warn(
+        `[Consumer] Campaign ${campaignId} not found or account mismatch; dropping.`,
+      );
+      message.ack();
+      return;
+    }
+
+    const account = await store.findConnectedAccount(event.accountId);
+    if (!account || account.tokenExpiresAt <= now) {
+      console.warn(
+        `[Consumer] Account ${event.accountId} is not connected or token expired.`,
+      );
+      message.ack();
+      return;
+    }
+
+    // Step 2 atomic claim: keyed by recipient messagingUserId and campaign
+    const actionKey = `${event.accountId}:${event.messagingUserId}:${campaignId}:step2`;
+    const claimResult = await store.claimDelivery(
+      {
+        actionKey,
+        workspaceId: active.campaign.workspaceId,
+        accountId: event.accountId,
+        commentId: `step2:${event.messagingUserId}:${campaignId}`,
+        mediaId: active.campaign.mediaId,
+        campaignId: active.campaign.id,
+        revisionId: active.revision.id,
+        claimedAt: now,
+      },
+      message.attempts,
+    );
+
+    if (claimResult.status === "already_settled") {
+      console.info(
+        `[Consumer] Step 2 already delivered for ${actionKey}; skipping.`,
+      );
+      message.ack();
+      return;
+    }
+
+    // Decrypt account access token
+    let accessToken: string;
+    try {
+      const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
+      accessToken = await vault.open(account.tokenCiphertext, event.accountId);
+    } catch (err) {
+      console.error(
+        "[Consumer] Failed to decrypt account token for step 2:",
+        err,
+      );
+      await store.recordOutcome({
+        id: crypto.randomUUID(),
+        actionKey,
+        workspaceId: active.campaign.workspaceId,
+        accountId: event.accountId,
+        status: "failed",
+        errorCode: "TOKEN_DECRYPT_FAIL",
+        attemptCount: message.attempts,
+        occurredAt: now,
+      });
+      message.ack();
+      return;
+    }
+
+    // Send the promised resource in the active 24-hour interaction window
+    const replyText = formatReplyText(
+      active.revision.replyTemplate,
+      active.revision.resourceUrl,
+    );
+
+    console.log(
+      `[Consumer] Dispatching Step 2 resource payload to user ${event.messagingUserId}`,
+    );
+
+    const result = await sendInstagramPrivateReply(
+      {
+        graphVersion: env.META_GRAPH_VERSION,
+        accountId: event.accountId,
+        accessToken,
+        messagingUserId: event.messagingUserId,
+        text: replyText,
+      },
+      fetcher,
+    );
+
+    return settleOutcome(
+      result,
+      store,
+      message,
       actionKey,
-      workspaceId: active.campaign.workspaceId,
-      accountId: event.accountId,
-      status: "failed",
-      errorCode: "TOKEN_DECRYPT_FAIL",
-      attemptCount: message.attempts,
-      occurredAt: now,
-    });
-    message.ack();
-    return;
+      active.campaign.workspaceId,
+      event.accountId,
+      now,
+    );
   }
 
-  // 9. Dispatch private reply via Meta Graph API
-  const replyText = formatReplyText(
-    active.revision.replyTemplate,
-    active.revision.resourceUrl,
-  );
+  // Any other unsupported event kind
+  console.info(`[Consumer] Ignoring unsupported event kind: ${event.kind}`);
+  message.ack();
+}
 
-  const result = await sendInstagramPrivateReply(
-    {
-      graphVersion: env.META_GRAPH_VERSION,
-      accountId: event.accountId,
-      accessToken,
-      commentId: event.commentId,
-      text: replyText,
-    },
-    fetcher,
-  );
-
-  // 10. Record outcome and settle queue message
+/**
+ * Handles outcome settlement, D1 recording, and queue backoff.
+ */
+async function settleOutcome(
+  result: Awaited<ReturnType<typeof sendInstagramPrivateReply>>,
+  store: ReturnType<typeof createConsumerStore>,
+  message: Message<AutomationEvent>,
+  actionKey: string,
+  workspaceId: string,
+  accountId: string,
+  now: number,
+): Promise<void> {
   if (result.status === "sent") {
+    console.log(`[Consumer] Delivery successful: ${actionKey}`);
     await store.recordOutcome({
       id: crypto.randomUUID(),
       actionKey,
-      workspaceId: active.campaign.workspaceId,
-      accountId: event.accountId,
+      workspaceId,
+      accountId,
       status: "sent",
       providerMessageId: result.providerMessageId,
       attemptCount: message.attempts,
@@ -183,12 +386,14 @@ export async function processQueueMessage(
   }
 
   if (result.status === "failed") {
-    // Permanent rejection from Meta (e.g. comment deleted, user blocked)
+    console.warn(
+      `[Consumer] Delivery permanently failed: ${actionKey} (${result.reason})`,
+    );
     await store.recordOutcome({
       id: crypto.randomUUID(),
       actionKey,
-      workspaceId: active.campaign.workspaceId,
-      accountId: event.accountId,
+      workspaceId,
+      accountId,
       status: "failed",
       ...(result.errorCode ? { errorCode: result.errorCode } : {}),
       attemptCount: message.attempts,
@@ -199,12 +404,14 @@ export async function processQueueMessage(
   }
 
   if (result.status === "unknown") {
-    // Ambiguous network outcome: do NOT blind retry (could result in duplicate message to user)
+    console.warn(
+      `[Consumer] Delivery network outcome ambiguous: ${actionKey}; not blind retrying.`,
+    );
     await store.recordOutcome({
       id: crypto.randomUUID(),
       actionKey,
-      workspaceId: active.campaign.workspaceId,
-      accountId: event.accountId,
+      workspaceId,
+      accountId,
       status: "unknown",
       errorCode: "NETWORK_TIMEOUT",
       attemptCount: message.attempts,
@@ -214,18 +421,20 @@ export async function processQueueMessage(
     return;
   }
 
-  // 11. Retryable outcome (429 rate limit or 5xx)
+  // Retryable outcome (HTTP 429 / Code 32 / 5xx)
+  console.warn(
+    `[Consumer] Delivery retryable: ${actionKey} (${result.reason})`,
+  );
   await store.recordOutcome({
     id: crypto.randomUUID(),
     actionKey,
-    workspaceId: active.campaign.workspaceId,
-    accountId: event.accountId,
+    workspaceId,
+    accountId,
     status: "retryable",
     attemptCount: message.attempts,
     occurredAt: now,
   });
 
-  // Calculate backoff: respect Retry-After or exponential delay (5s, 15s, 45s)
   const delay =
     result.retryAfterSeconds ?? Math.min(300, 5 * 3 ** (message.attempts - 1));
   message.retry({ delaySeconds: delay });
