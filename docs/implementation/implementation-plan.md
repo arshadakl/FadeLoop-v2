@@ -8,8 +8,8 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Profile Metadata + Account Disconnect Live |
-| Current phase | P00-P08-12 DONE; Live comment testing with Tester Account next |
+| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Profile Metadata + Responsive Accounts Card Live |
+| Current phase | P00-P08-13 DONE; Live comment delivery token decryption fixed |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
 | Application/runtime | Single unified worker (apps/server, fadeloop) serving assets, API, ingress, queue consumer, and cron |
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step Button Template & automatic subscribed_apps active |
@@ -17,11 +17,11 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
 | Tests/builds/deployment | pnpm check PASS, 91 tests across 21 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Accounts Management (Profile Metadata, Disconnect, Accessible Confirmation Dialogs) |
-| Immediate next action | Live end-to-end verification with Meta App Tester account commenting on live Reel |
-| Current blockers | Meta App must be in Live mode OR commenting account must be registered in App Roles -> Testers |
+| Active owner | Antigravity: Consumer Token Decryption Fix + Responsive Accounts Card |
+| Immediate next action | Live end-to-end verification with comment on live Reel |
+| Current blockers | None |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version a3f9449b-29de-41b3-88e0-f56eaa38fbd7 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 5296235b-4def-44d4-8366-4ac74f469329 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
