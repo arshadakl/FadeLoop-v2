@@ -8,8 +8,8 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Public Comment Reply + Postback Opt-in Live |
-| Current phase | P00-P08-14 DONE; Live comment & Step 2 delivery active |
+| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Public Comment Reply Persistence Live |
+| Current phase | P00-P08-15 DONE; Step 2 + Public comment reply fully verified and persisted |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
 | Application/runtime | Single unified worker (apps/server, fadeloop) serving assets, API, ingress, queue consumer, and cron |
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step Button Template & automatic subscribed_apps active |
@@ -17,11 +17,11 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
 | Tests/builds/deployment | pnpm check PASS, 93 tests across 22 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Step 2 Postback Delivery + Public Comment Reply + Deliveries Truncation |
-| Immediate next action | Resync account webhooks and test comment + 'Send Me' button tap on live Reel |
+| Active owner | Antigravity: Public Comment Reply Persistence in Route Handlers |
+| Immediate next action | Live test comment reply and update existing campaign |
 | Current blockers | None |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version e909188a-b08f-4e09-b92d-cf9c066d9cc2 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 142a60a9-61bb-4c96-9a18-01c08a8c37f5 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
