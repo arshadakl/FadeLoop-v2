@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 const FoundationPage = lazy(() => import("../pages/foundation-page"));
 const LoginPage = lazy(() => import("../pages/login-page"));
 const CampaignsPage = lazy(() => import("../pages/campaigns-page"));
+const EditCampaignPage = lazy(() => import("../pages/edit-campaign-page"));
 const AccountsPage = lazy(() => import("../pages/accounts-page"));
 const DeliveriesPage = lazy(() => import("../pages/deliveries-page"));
 
@@ -42,6 +43,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<CampaignsPage />} />
             <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/campaigns/:id/edit" element={<EditCampaignPage />} />
             <Route path="/accounts" element={<AccountsPage />} />
             <Route path="/deliveries" element={<DeliveriesPage />} />
             <Route path="/foundation" element={<FoundationPage />} />

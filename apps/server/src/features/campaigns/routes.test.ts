@@ -233,6 +233,36 @@ describe("Campaigns & Deliveries Routes", () => {
     });
   });
 
+  it("fetches single campaign by ID via GET", async () => {
+    const listReq = new Request("https://v2.test/api/campaigns", {
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+    const listRes = await handleCampaigns(listReq, { ...env, DB: db }, now);
+    const { campaigns } = (await listRes.json()) as {
+      campaigns: Array<{ campaign: { id: string }; revision: { id: string } }>;
+    };
+    const campId = campaigns[0]?.campaign.id ?? "";
+
+    const getReq = new Request(`https://v2.test/api/campaigns/${campId}`, {
+      method: "GET",
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+
+    const getRes = await handleCampaignItem(
+      getReq,
+      campId,
+      { ...env, DB: db },
+      now + 1500,
+    );
+    expect(getRes.status).toBe(200);
+    const item = (await getRes.json()) as {
+      campaign: { id: string };
+      revision: { id: string };
+    };
+    expect(item.campaign.id).toBe(campId);
+    expect(item.revision).toBeDefined();
+  });
+
   it("updates campaign revision settings via PUT", async () => {
     const listReq = new Request("https://v2.test/api/campaigns", {
       headers: { cookie: sessionCookie(sessionToken, 3600, true) },

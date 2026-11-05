@@ -47,11 +47,12 @@ export function matchComment(
  * of the comment occurrence.
  */
 export const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+export const CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes tolerance for distributed server clock skew
 
 export function isCommentWithinReplyWindow(
   occurredAt: number,
   now: number,
 ): boolean {
-  if (occurredAt > now) return false; // Future event timestamp rejection
+  if (occurredAt > now + CLOCK_SKEW_TOLERANCE_MS) return false; // Future event timestamp rejection with tolerance
   return now - occurredAt <= SEVEN_DAYS_MS;
 }

@@ -50,11 +50,13 @@ describe("Comment campaign matching", () => {
     const sixDaysAgo = now - 6 * 24 * 60 * 60 * 1000;
     const sevenDaysAgo = now - SEVEN_DAYS_MS;
     const eightDaysAgo = now - 8 * 24 * 60 * 60 * 1000;
-    const future = now + 1000;
+    const farFuture = now + 10 * 60 * 1000;
+    const slightFuture = now + 2000; // 2s ahead due to minor clock skew
 
     expect(isCommentWithinReplyWindow(sixDaysAgo, now)).toBe(true);
     expect(isCommentWithinReplyWindow(sevenDaysAgo, now)).toBe(true);
     expect(isCommentWithinReplyWindow(eightDaysAgo, now)).toBe(false);
-    expect(isCommentWithinReplyWindow(future, now)).toBe(false);
+    expect(isCommentWithinReplyWindow(slightFuture, now)).toBe(true);
+    expect(isCommentWithinReplyWindow(farFuture, now)).toBe(false);
   });
 });

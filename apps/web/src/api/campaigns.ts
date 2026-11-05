@@ -55,6 +55,16 @@ export async function fetchCampaigns(
   return getJSON<CampaignsResponse>(`/api/campaigns${query}`, signal);
 }
 
+export async function fetchCampaignById(
+  campaignId: string,
+  signal?: AbortSignal,
+): Promise<CampaignData> {
+  return getJSON<CampaignData>(
+    `/api/campaigns/${encodeURIComponent(campaignId)}`,
+    signal,
+  );
+}
+
 export async function createCampaign(
   input: CreateCampaignInput,
   signal?: AbortSignal,

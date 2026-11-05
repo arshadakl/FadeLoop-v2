@@ -88,9 +88,11 @@ export async function handleWebhookRequest(
 
   // 2. POST: Inbound webhook event notifications
   if (request.method === "POST") {
-    if (!env.META_WEBHOOK_SIGNING_SECRET || !env.INCOMING_EVENTS_QUEUE) {
+    const primarySigningSecret =
+      env.META_WEBHOOK_SIGNING_SECRET || env.META_APP_SECRET;
+    if (!primarySigningSecret || !env.INCOMING_EVENTS_QUEUE) {
       console.error(
-        "[Ingress] Server misconfiguration: missing META_WEBHOOK_SIGNING_SECRET or INCOMING_EVENTS_QUEUE",
+        "[Ingress] Server misconfiguration: missing META_WEBHOOK_SIGNING_SECRET/META_APP_SECRET or INCOMING_EVENTS_QUEUE",
       );
       return unavailable();
     }
@@ -115,11 +117,30 @@ export async function handleWebhookRequest(
     }
 
     // Authenticate raw body before parsing JSON or executing any queue operations
-    const isValid = await verifyWebhookSignature(
-      env.META_WEBHOOK_SIGNING_SECRET,
-      rawBuffer,
-      signature,
-    );
+    let isValid = false;
+    if (env.META_WEBHOOK_SIGNING_SECRET) {
+      isValid = await verifyWebhookSignature(
+        env.META_WEBHOOK_SIGNING_SECRET,
+        rawBuffer,
+        signature,
+      );
+    }
+    if (
+      !isValid &&
+      env.META_APP_SECRET &&
+      env.META_APP_SECRET !== env.META_WEBHOOK_SIGNING_SECRET
+    ) {
+      isValid = await verifyWebhookSignature(
+        env.META_APP_SECRET,
+        rawBuffer,
+        signature,
+      );
+      if (isValid) {
+        console.log(
+          "[Ingress] Signature verified via META_APP_SECRET fallback.",
+        );
+      }
+    }
 
     if (!isValid) {
       console.warn(

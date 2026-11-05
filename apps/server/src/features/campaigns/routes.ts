@@ -130,7 +130,15 @@ export async function handleCampaignItem(
   const session = await authenticateOwner(request, env.DB, now);
   if (!session) return apiError("UNAUTHENTICATED", 401);
 
-  // 1. DELETE /api/campaigns/:id
+  // 1. GET /api/campaigns/:id
+  if (request.method === "GET") {
+    const store = createCampaignStore(env.DB);
+    const item = await store.findCampaignById(campaignId, session.workspaceId);
+    if (!item) return apiError("NOT_FOUND", 404);
+    return Response.json(item, { headers: { "cache-control": "no-store" } });
+  }
+
+  // 2. DELETE /api/campaigns/:id
   if (request.method === "DELETE") {
     if (!hasTrustedOrigin(request, env.APP_ORIGIN)) {
       return apiError("FORBIDDEN", 403);
