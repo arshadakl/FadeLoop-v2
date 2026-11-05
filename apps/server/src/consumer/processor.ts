@@ -183,9 +183,9 @@ export async function processQueueMessage(
           accessToken,
           commentId: event.commentId,
           text: promptText,
-          quickReplies: [
+          buttons: [
             {
-              content_type: "text",
+              type: "postback",
               title: buttonTitle,
               payload: `step2:${active.campaign.id}:${event.commentId}`,
             },

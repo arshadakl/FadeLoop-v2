@@ -6,6 +6,7 @@ import {
   consumeOAuthState,
   createOAuthAttempt,
 } from "@fadeloop/worker-common/meta/oauth-state";
+import { subscribeInstagramAccountToWebhooks } from "@fadeloop/worker-common/meta/webhook-subscription";
 import { apiError } from "../../common/http";
 import { authenticateOwner, getPrimaryAppOrigin } from "../owner/session";
 import { createOwnerStore } from "../owner/storage";
@@ -18,6 +19,7 @@ export interface OAuthRouteEnvironment {
   META_APP_SECRET: string;
   META_REDIRECT_URI: string;
   TOKEN_ENCRYPTION_KEY: string;
+  META_GRAPH_VERSION?: string | undefined;
 }
 
 /**
@@ -149,6 +151,21 @@ export async function handleInstagramCallback(
       return Response.redirect(
         `${baseOrigin}/accounts?error=connect_failed`,
         302,
+      );
+    }
+
+    // Automatically subscribe the Instagram account to Meta webhooks (comments, messages)
+    try {
+      await subscribeInstagramAccountToWebhooks(
+        shortLived.userId,
+        longLived.accessToken,
+        env.META_GRAPH_VERSION || "v23.0",
+        fetcher,
+      );
+    } catch (subErr) {
+      console.warn(
+        `[OAuth] Warning: Failed to subscribe account ${shortLived.userId} to webhooks:`,
+        subErr,
       );
     }
 

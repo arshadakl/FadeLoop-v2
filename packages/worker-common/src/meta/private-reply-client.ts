@@ -10,6 +10,12 @@ export interface QuickReplyOption {
   payload: string;
 }
 
+export interface PostbackButton {
+  type: "postback";
+  title: string;
+  payload: string;
+}
+
 export interface SendPrivateReplyInput {
   graphVersion: string;
   accountId: string;
@@ -19,6 +25,7 @@ export interface SendPrivateReplyInput {
   messagingUserId?: string;
   text: string;
   quickReplies?: QuickReplyOption[];
+  buttons?: PostbackButton[];
 }
 
 /**
@@ -45,20 +52,29 @@ export async function sendInstagramPrivateReply(
     ? { id: input.messagingUserId }
     : { comment_id: input.commentId };
 
-  const messagePayload: {
-    text: string;
-    quick_replies?: QuickReplyOption[];
-  } = {
-    text: input.text,
-  };
+  const messagePayload: Record<string, unknown> =
+    input.buttons && input.buttons.length > 0
+      ? {
+          attachment: {
+            type: "template",
+            payload: {
+              template_type: "button",
+              text: input.text,
+              buttons: input.buttons.slice(0, 3),
+            },
+          },
+        }
+      : {
+          text: input.text,
+          ...(input.quickReplies && input.quickReplies.length > 0
+            ? { quick_replies: input.quickReplies.slice(0, 13) }
+            : {}),
+        };
 
-  if (input.quickReplies && input.quickReplies.length > 0) {
-    messagePayload.quick_replies = input.quickReplies.slice(0, 13);
-  }
-
-  const payload = {
+  const payload: Record<string, unknown> = {
     recipient,
     message: messagePayload,
+    ...(input.messagingUserId ? { messaging_type: "RESPONSE" } : {}),
   };
 
   const body = JSON.stringify(payload);

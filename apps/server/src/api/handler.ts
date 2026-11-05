@@ -6,7 +6,10 @@ import {
   handleInstagramCallback,
   handleInstagramConnect,
 } from "../features/accounts/oauth";
-import { handleAccounts } from "../features/accounts/routes";
+import {
+  handleAccounts,
+  handleAccountWebhookSubscription,
+} from "../features/accounts/routes";
 import {
   handleCampaignItem,
   handleCampaigns,
@@ -92,6 +95,7 @@ export async function handleApiRequest(
           META_APP_SECRET: env.META_APP_SECRET,
           META_REDIRECT_URI: env.META_REDIRECT_URI.trim(),
           TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          META_GRAPH_VERSION: env.META_GRAPH_VERSION,
         },
         Date.now(),
       );
@@ -122,6 +126,7 @@ export async function handleApiRequest(
           META_APP_SECRET: env.META_APP_SECRET,
           META_REDIRECT_URI: env.META_REDIRECT_URI.trim(),
           TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          META_GRAPH_VERSION: env.META_GRAPH_VERSION,
         },
         fetch,
         Date.now(),
@@ -157,6 +162,30 @@ export async function handleApiRequest(
       );
     } catch (err) {
       console.error("Account media error:", err);
+      return unavailable();
+    }
+  }
+
+  // Instagram Account Webhook Subscription (GET/POST /api/accounts/:id/webhooks)
+  const webhookSubMatch = /^\/api\/accounts\/(\d+)\/webhooks$/.exec(path);
+  if (webhookSubMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleAccountWebhookSubscription(
+        request,
+        {
+          DB: env.DB,
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        webhookSubMatch[1],
+        Date.now(),
+        fetch,
+      );
+    } catch (err) {
+      console.error("Account webhook subscription error:", err);
       return unavailable();
     }
   }

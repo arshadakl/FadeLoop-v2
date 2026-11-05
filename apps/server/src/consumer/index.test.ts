@@ -428,15 +428,27 @@ describe("Consumer Queue message processing", () => {
     const payload = dispatchedPayload as {
       recipient: { comment_id: string };
       message: {
-        text: string;
-        quick_replies?: Array<{ title: string; payload: string }>;
+        attachment: {
+          type: string;
+          payload: {
+            template_type: string;
+            text: string;
+            buttons: Array<{ type: string; title: string; payload: string }>;
+          };
+        };
       };
     };
     expect(payload.recipient.comment_id).toBe("c_interactive_1");
-    expect(payload.message.text).toBe("Tap below to receive your link 👇");
-    expect(payload.message.quick_replies).toHaveLength(1);
-    expect(payload.message.quick_replies?.[0]?.title).toBe("Send Me");
-    expect(payload.message.quick_replies?.[0]?.payload).toBe(
+    expect(payload.message.attachment.type).toBe("template");
+    expect(payload.message.attachment.payload.template_type).toBe("button");
+    expect(payload.message.attachment.payload.text).toBe(
+      "Tap below to receive your link 👇",
+    );
+    expect(payload.message.attachment.payload.buttons).toHaveLength(1);
+    expect(payload.message.attachment.payload.buttons[0]?.title).toBe(
+      "Send Me",
+    );
+    expect(payload.message.attachment.payload.buttons[0]?.payload).toBe(
       "step2:camp_interactive:c_interactive_1",
     );
   });

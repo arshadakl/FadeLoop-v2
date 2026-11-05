@@ -1,4 +1,4 @@
-import { getJSON } from "./client";
+import { getJSON, sendJSON } from "./client";
 
 export interface AccountMetadata {
   account_id: string;
@@ -8,6 +8,32 @@ export interface AccountMetadata {
 
 export interface AccountsResponse {
   accounts: AccountMetadata[];
+}
+
+export interface WebhookSubscriptionStatus {
+  ok: boolean;
+  subscribed: boolean;
+  subscribedFields: string[];
+}
+
+export async function fetchAccountWebhookStatus(
+  accountId: string,
+  signal?: AbortSignal,
+): Promise<WebhookSubscriptionStatus> {
+  return getJSON<WebhookSubscriptionStatus>(
+    `/api/accounts/${encodeURIComponent(accountId)}/webhooks`,
+    signal,
+  );
+}
+
+export async function subscribeAccountWebhooks(
+  accountId: string,
+): Promise<WebhookSubscriptionStatus> {
+  return sendJSON<WebhookSubscriptionStatus>(
+    `/api/accounts/${encodeURIComponent(accountId)}/webhooks`,
+    "POST",
+    {},
+  );
 }
 
 export async function fetchAccounts(
