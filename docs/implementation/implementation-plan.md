@@ -8,20 +8,20 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page Live |
-| Current phase | P00-P07 DONE; P08 LIVE (P08-01 through P08-11 DONE); Live comment testing with Tester Account next |
+| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Profile Metadata + Account Disconnect Live |
+| Current phase | P00-P08-12 DONE; Live comment testing with Tester Account next |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
 | Application/runtime | Single unified worker (apps/server, fadeloop) serving assets, API, ingress, queue consumer, and cron |
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step Button Template & automatic subscribed_apps active |
-| Database | D1 fadeloop-d1 active; migrations 0001, 0002, 0003 applied; owner workspace & interactive revision columns active |
+| Database | D1 fadeloop-d1 active; migrations 0001, 0002, 0003, 0004 applied; account username/name/profile_picture columns active |
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
-| Tests/builds/deployment | pnpm check PASS, 90 tests across 21 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
+| Tests/builds/deployment | pnpm check PASS, 91 tests across 21 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Phase 8 Expansion (Webhook Subscriptions, Button Template, Edit Page, Media Picker) |
+| Active owner | Antigravity: Accounts Management (Profile Metadata, Disconnect, Accessible Confirmation Dialogs) |
 | Immediate next action | Live end-to-end verification with Meta App Tester account commenting on live Reel |
 | Current blockers | Meta App must be in Live mode OR commenting account must be registered in App Roles -> Testers |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version a44ed295-a74b-4a3e-b4b5-54d77b4bae1d |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version a3f9449b-29de-41b3-88e0-f56eaa38fbd7 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
