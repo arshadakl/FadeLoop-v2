@@ -1,11 +1,16 @@
 import { healthResponse, unavailable } from "@fadeloop/worker-common/http";
 import { apiError } from "../common/http";
 import type { ServerEnvironment } from "../environment";
+import { handleAccountMedia } from "../features/accounts/media";
 import {
   handleInstagramCallback,
   handleInstagramConnect,
 } from "../features/accounts/oauth";
-import { handleAccounts } from "../features/accounts/routes";
+import {
+  handleAccounts,
+  handleAccountWebhookSubscription,
+  handleDeleteAccount,
+} from "../features/accounts/routes";
 import {
   handleCampaignItem,
   handleCampaigns,
@@ -89,8 +94,9 @@ export async function handleApiRequest(
           APP_ORIGIN: env.APP_ORIGIN,
           META_APP_ID: env.META_APP_ID,
           META_APP_SECRET: env.META_APP_SECRET,
-          META_REDIRECT_URI: env.META_REDIRECT_URI,
+          META_REDIRECT_URI: env.META_REDIRECT_URI.trim(),
           TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          META_GRAPH_VERSION: env.META_GRAPH_VERSION,
         },
         Date.now(),
       );
@@ -101,7 +107,7 @@ export async function handleApiRequest(
   }
 
   // Instagram OAuth Callback
-  if (path === "/api/auth/instagram/callback") {
+  if (path === "/api/auth/instagram/callback" || path === "/auth/callback") {
     if (
       !env.DB ||
       !env.APP_ORIGIN ||
@@ -119,8 +125,9 @@ export async function handleApiRequest(
           APP_ORIGIN: env.APP_ORIGIN,
           META_APP_ID: env.META_APP_ID,
           META_APP_SECRET: env.META_APP_SECRET,
-          META_REDIRECT_URI: env.META_REDIRECT_URI,
+          META_REDIRECT_URI: env.META_REDIRECT_URI.trim(),
           TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          META_GRAPH_VERSION: env.META_GRAPH_VERSION,
         },
         fetch,
         Date.now(),
@@ -131,13 +138,89 @@ export async function handleApiRequest(
     }
   }
 
-  // Instagram Accounts metadata
+  // Instagram Accounts metadata (GET list)
   if (path === "/api/accounts") {
     if (!env.DB) return unavailable();
     try {
-      return await handleAccounts(request, env.DB, Date.now());
+      return await handleAccounts(
+        request,
+        {
+          DB: env.DB,
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        Date.now(),
+        fetch,
+      );
     } catch {
       console.error("Account metadata storage unavailable");
+      return unavailable();
+    }
+  }
+
+  // Single Instagram Account Item (DELETE /api/accounts/:id)
+  const accountItemMatch = /^\/api\/accounts\/(\d+)$/.exec(path);
+  if (accountItemMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleDeleteAccount(
+        request,
+        {
+          DB: env.DB,
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        accountItemMatch[1],
+        Date.now(),
+      );
+    } catch (err) {
+      console.error("Account delete error:", err);
+      return unavailable();
+    }
+  }
+
+  // Instagram Account Media (GET /api/accounts/:id/media)
+  const mediaMatch = /^\/api\/accounts\/(\d+)\/media$/.exec(path);
+  if (mediaMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleAccountMedia(
+        request,
+        env,
+        mediaMatch[1],
+        Date.now(),
+        fetch,
+      );
+    } catch (err) {
+      console.error("Account media error:", err);
+      return unavailable();
+    }
+  }
+
+  // Instagram Account Webhook Subscription (GET/POST /api/accounts/:id/webhooks)
+  const webhookSubMatch = /^\/api\/accounts\/(\d+)\/webhooks$/.exec(path);
+  if (webhookSubMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleAccountWebhookSubscription(
+        request,
+        {
+          DB: env.DB,
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        webhookSubMatch[1],
+        Date.now(),
+        fetch,
+      );
+    } catch (err) {
+      console.error("Account webhook subscription error:", err);
       return unavailable();
     }
   }

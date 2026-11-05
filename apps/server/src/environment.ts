@@ -28,6 +28,7 @@ export interface ServerEnvironment extends WorkerEnvironment {
   META_REDIRECT_URI?: string;
   META_WEBHOOK_VERIFY_TOKEN?: string;
   META_WEBHOOK_SIGNING_SECRET?: string;
+  META_GRAPH_VERSION?: string;
 
   // Token Vault
   TOKEN_ENCRYPTION_KEY?: string;

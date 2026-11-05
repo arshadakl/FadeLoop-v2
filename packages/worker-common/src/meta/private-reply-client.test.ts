@@ -105,4 +105,44 @@ describe("sendInstagramPrivateReply", () => {
       expect(result.reason).toContain("Connection reset by peer");
     }
   });
+
+  it("formats button template payload for Message Requests folder survival", async () => {
+    let capturedBody = "";
+    const mockFetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      capturedBody = init?.body as string;
+      return Response.json({ message_id: "m_mid_button_test" });
+    });
+
+    const result = await sendInstagramPrivateReply(
+      {
+        ...baseInput,
+        buttons: [
+          {
+            type: "postback",
+            title: "Send Me",
+            payload: "step2:camp123:comm999",
+          },
+        ],
+      },
+      mockFetcher as unknown as typeof fetch,
+    );
+
+    expect(result.status).toBe("sent");
+    const parsed = JSON.parse(capturedBody);
+    expect(parsed.recipient).toEqual({ comment_id: "comment_999" });
+    expect(parsed.message.attachment).toEqual({
+      type: "template",
+      payload: {
+        template_type: "button",
+        text: baseInput.text,
+        buttons: [
+          {
+            type: "postback",
+            title: "Send Me",
+            payload: "step2:camp123:comm999",
+          },
+        ],
+      },
+    });
+  });
 });

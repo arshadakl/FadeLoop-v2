@@ -32,6 +32,34 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0003 = await readFile(
+    new URL(
+      "../../../../../schema/0003_campaign_confirmation_flow.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0005 = await readFile(
+    new URL(
+      "../../../../../schema/0005_comment_reply_text.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0006 = await readFile(
+    new URL(
+      "../../../../../schema/0006_delivery_recipient_username.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0007 = await readFile(
+    new URL(
+      "../../../../../schema/0007_campaigns_media_lookup_index.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     // Strip comments
@@ -50,6 +78,10 @@ beforeAll(async () => {
 
   await applySql(sql0001);
   await applySql(sql0002);
+  await applySql(sql0003);
+  await applySql(sql0005);
+  await applySql(sql0006);
+  await applySql(sql0007);
 
   // Set up workspace & connected Instagram account
   await db
@@ -197,5 +229,71 @@ describe("Campaign and delivery D1 storage", () => {
         occurredAt: now,
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it("updates campaign revision and status", async () => {
+    const store = createCampaignStore(db);
+
+    const found = await store.findCampaignById("camp_1", "ws_1");
+    expect(found).not.toBeNull();
+    expect(found?.campaign.id).toBe("camp_1");
+
+    const updated = await store.updateCampaign({
+      campaignId: "camp_1",
+      workspaceId: "ws_1",
+      status: "paused",
+      revision: {
+        matchMode: "any_comment",
+        keywords: [],
+        replyTemplate: "Updated reply template here",
+        resourceUrl: "https://newsite.com/resource",
+        confirmationButtonEnabled: true,
+        confirmationButtonText: "Get Access",
+        confirmationPromptText: "Click below!",
+      },
+      now: now + 5000,
+    });
+
+    expect(updated).not.toBeNull();
+    expect(updated?.campaign.status).toBe("paused");
+    expect(updated?.revision.matchMode).toBe("any_comment");
+    expect(updated?.revision.replyTemplate).toBe("Updated reply template here");
+    expect(updated?.revision.resourceUrl).toBe("https://newsite.com/resource");
+    expect(updated?.revision.confirmationButtonText).toBe("Get Access");
+
+    // Verify it persists in D1
+    const refetched = await store.findCampaignById("camp_1", "ws_1");
+    expect(refetched?.campaign.status).toBe("paused");
+    expect(refetched?.revision.replyTemplate).toBe(
+      "Updated reply template here",
+    );
+  });
+
+  it("deletes campaign and cascades to revisions and claims", async () => {
+    const store = createCampaignStore(db);
+
+    const deleted = await store.deleteCampaign("camp_1", "ws_1");
+    expect(deleted).toBe(true);
+
+    const found = await store.findCampaignById("camp_1", "ws_1");
+    expect(found).toBeNull();
+
+    // Verify cascade: campaign_revisions for camp_1 should be 0
+    const revs = await db
+      .prepare(
+        "SELECT count(*) as cnt FROM campaign_revisions WHERE campaign_id = ?",
+      )
+      .bind("camp_1")
+      .first<{ cnt: number }>();
+    expect(revs?.cnt).toBe(0);
+
+    // Verify cascade: delivery_claims for camp_1 should be 0
+    const claims = await db
+      .prepare(
+        "SELECT count(*) as cnt FROM delivery_claims WHERE campaign_id = ?",
+      )
+      .bind("camp_1")
+      .first<{ cnt: number }>();
+    expect(claims?.cnt).toBe(0);
   });
 });

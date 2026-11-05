@@ -47,6 +47,34 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0003 = await readFile(
+    new URL(
+      "../../../../../schema/0003_campaign_confirmation_flow.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0005 = await readFile(
+    new URL(
+      "../../../../../schema/0005_comment_reply_text.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0006 = await readFile(
+    new URL(
+      "../../../../../schema/0006_delivery_recipient_username.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0007 = await readFile(
+    new URL(
+      "../../../../../schema/0007_campaigns_media_lookup_index.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -64,6 +92,10 @@ beforeAll(async () => {
 
   await applySql(sql0001);
   await applySql(sql0002);
+  await applySql(sql0003);
+  await applySql(sql0005);
+  await applySql(sql0006);
+  await applySql(sql0007);
 
   // Setup workspace, account, and owner session
   await db
@@ -219,10 +251,95 @@ describe("Campaigns & Deliveries Routes", () => {
       now + 1000,
     );
     expect(updateRes.status).toBe(200);
-    expect((await updateRes.json()) as { status: string }).toEqual({
+    expect(await updateRes.json()).toMatchObject({
       success: true,
       status: "paused",
     });
+  });
+
+  it("fetches single campaign by ID via GET", async () => {
+    const listReq = new Request("https://v2.test/api/campaigns", {
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+    const listRes = await handleCampaigns(listReq, { ...env, DB: db }, now);
+    const { campaigns } = (await listRes.json()) as {
+      campaigns: Array<{ campaign: { id: string }; revision: { id: string } }>;
+    };
+    const campId = campaigns[0]?.campaign.id ?? "";
+
+    const getReq = new Request(`https://v2.test/api/campaigns/${campId}`, {
+      method: "GET",
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+
+    const getRes = await handleCampaignItem(
+      getReq,
+      campId,
+      { ...env, DB: db },
+      now + 1500,
+    );
+    expect(getRes.status).toBe(200);
+    const item = (await getRes.json()) as {
+      campaign: { id: string };
+      revision: { id: string };
+    };
+    expect(item.campaign.id).toBe(campId);
+    expect(item.revision).toBeDefined();
+  });
+
+  it("updates campaign revision settings via PUT", async () => {
+    const listReq = new Request("https://v2.test/api/campaigns", {
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+    const listRes = await handleCampaigns(listReq, { ...env, DB: db }, now);
+    const { campaigns } = (await listRes.json()) as {
+      campaigns: Array<{ campaign: { id: string }; revision: { id: string } }>;
+    };
+    const campId = campaigns[0]?.campaign.id ?? "";
+
+    const editReq = new Request(`https://v2.test/api/campaigns/${campId}`, {
+      method: "PUT",
+      headers: {
+        origin: "https://v2.test",
+        cookie: sessionCookie(sessionToken, 3600, true),
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        status: "published",
+        matchMode: "exact_keyword",
+        keywords: ["updated", "keyword"],
+        replyTemplate: "Updated reply message here",
+        resourceUrl: "https://example.com/updated",
+        confirmationButtonEnabled: true,
+        confirmationButtonText: "Claim Now",
+        commentReplyText: "Check your DMs! 📩",
+      }),
+    });
+
+    const editRes = await handleCampaignItem(
+      editReq,
+      campId,
+      { ...env, DB: db },
+      now + 2000,
+    );
+    expect(editRes.status).toBe(200);
+    const editJson = (await editRes.json()) as {
+      success: boolean;
+      status: string;
+      campaign: { status: string };
+      revision: {
+        keywords: string[];
+        replyTemplate: string;
+        confirmationButtonText: string;
+        commentReplyText?: string | null;
+      };
+    };
+    expect(editJson.success).toBe(true);
+    expect(editJson.status).toBe("published");
+    expect(editJson.revision.keywords).toEqual(["updated", "keyword"]);
+    expect(editJson.revision.replyTemplate).toBe("Updated reply message here");
+    expect(editJson.revision.confirmationButtonText).toBe("Claim Now");
+    expect(editJson.revision.commentReplyText).toBe("Check your DMs! 📩");
   });
 
   it("lists delivery history", async () => {
@@ -287,5 +404,52 @@ describe("Campaigns & Deliveries Routes", () => {
     };
     expect(body.deliveries).toHaveLength(1);
     expect(body.deliveries[0]?.status).toBe("sent");
+  });
+
+  it("deletes campaign via DELETE and cascades cleanly", async () => {
+    const listReq = new Request("https://v2.test/api/campaigns", {
+      headers: { cookie: sessionCookie(sessionToken, 3600, true) },
+    });
+    const listRes = await handleCampaigns(listReq, { ...env, DB: db }, now);
+    const { campaigns } = (await listRes.json()) as {
+      campaigns: Array<{ campaign: { id: string } }>;
+    };
+    const campId = campaigns[0]?.campaign.id ?? "";
+
+    const delReq = new Request(`https://v2.test/api/campaigns/${campId}`, {
+      method: "DELETE",
+      headers: {
+        origin: "https://v2.test",
+        cookie: sessionCookie(sessionToken, 3600, true),
+      },
+    });
+
+    const delRes = await handleCampaignItem(
+      delReq,
+      campId,
+      { ...env, DB: db },
+      now + 3000,
+    );
+    expect(delRes.status).toBe(200);
+    expect(await delRes.json()).toEqual({
+      success: true,
+      id: campId,
+    });
+
+    // Subsequent DELETE should 404
+    const delAgain = await handleCampaignItem(
+      delReq,
+      campId,
+      { ...env, DB: db },
+      now + 3001,
+    );
+    expect(delAgain.status).toBe(404);
+
+    // List should now be empty
+    const listAfter = await handleCampaigns(listReq, { ...env, DB: db }, now);
+    const { campaigns: remaining } = (await listAfter.json()) as {
+      campaigns: Array<{ campaign: { id: string } }>;
+    };
+    expect(remaining.length).toBe(0);
   });
 });

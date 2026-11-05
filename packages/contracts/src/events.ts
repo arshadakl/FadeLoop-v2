@@ -16,6 +16,8 @@ export const automationEventSchema = z.discriminatedUnion("kind", [
     mediaId: identity,
     commentId: identity,
     text: z.string().max(10000),
+    fromUsername: z.string().max(256).optional(),
+    fromUserId: z.string().max(256).optional(),
   }),
   z.strictObject({
     ...shared,

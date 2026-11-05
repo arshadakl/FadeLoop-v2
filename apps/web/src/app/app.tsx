@@ -1,12 +1,27 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "../components/layout/protected-route";
 
 const FoundationPage = lazy(() => import("../pages/foundation-page"));
 const LoginPage = lazy(() => import("../pages/login-page"));
 const CampaignsPage = lazy(() => import("../pages/campaigns-page"));
+const EditCampaignPage = lazy(() => import("../pages/edit-campaign-page"));
 const AccountsPage = lazy(() => import("../pages/accounts-page"));
 const DeliveriesPage = lazy(() => import("../pages/deliveries-page"));
+
+function AuthCallbackHandler() {
+  useEffect(() => {
+    window.location.replace(
+      `/api/auth/instagram/callback${window.location.search}`,
+    );
+  }, []);
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center text-sm text-muted-foreground font-sans">
+      Completing Instagram authentication…
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,18 +36,59 @@ export function App() {
       <BrowserRouter>
         <Suspense
           fallback={
-            <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center text-sm text-slate-400">
+            <div className="min-h-screen bg-background flex items-center justify-center text-sm text-muted-foreground font-sans">
               Loading workspace…
             </div>
           }
         >
           <Routes>
-            <Route path="/" element={<CampaignsPage />} />
-            <Route path="/campaigns" element={<CampaignsPage />} />
-            <Route path="/accounts" element={<AccountsPage />} />
-            <Route path="/deliveries" element={<DeliveriesPage />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <CampaignsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/campaigns"
+              element={
+                <ProtectedRoute>
+                  <CampaignsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/campaigns/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditCampaignPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/accounts"
+              element={
+                <ProtectedRoute>
+                  <AccountsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deliveries"
+              element={
+                <ProtectedRoute>
+                  <DeliveriesPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/foundation" element={<FoundationPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+            <Route
+              path="/api/auth/instagram/callback"
+              element={<AuthCallbackHandler />}
+            />
             <Route
               path="*"
               element={

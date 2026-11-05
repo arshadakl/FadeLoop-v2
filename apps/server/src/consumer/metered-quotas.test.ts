@@ -33,6 +33,31 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0003 = await readFile(
+    new URL(
+      "../../../../schema/0003_campaign_confirmation_flow.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0005 = await readFile(
+    new URL("../../../../schema/0005_comment_reply_text.sql", import.meta.url),
+    "utf8",
+  );
+  const sql0006 = await readFile(
+    new URL(
+      "../../../../schema/0006_delivery_recipient_username.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const sql0007 = await readFile(
+    new URL(
+      "../../../../schema/0007_campaigns_media_lookup_index.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -50,6 +75,10 @@ beforeAll(async () => {
 
   await applySql(sql0001);
   await applySql(sql0002);
+  await applySql(sql0003);
+  await applySql(sql0005);
+  await applySql(sql0006);
+  await applySql(sql0007);
 
   // Setup workspace & account
   await db

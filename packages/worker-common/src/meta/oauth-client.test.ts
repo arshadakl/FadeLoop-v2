@@ -37,15 +37,18 @@ describe("Instagram Login request contract from legacy reference", () => {
       "redirect_uri=https%3A%2F%2Fv2.example%2Fauth%2Fcallback",
     );
   });
-  it("rejects unsafe numeric identifiers rather than persisting rounded IDs", async () => {
+  it("preserves 64-bit numeric identifiers as exact strings without rounding", async () => {
     const fetcher = async () =>
-      Response.json({
-        access_token: "fake-token",
-        user_id: Number.MAX_SAFE_INTEGER + 1,
-      });
-    await expect(
-      createInstagramOAuthClient(config, fetcher).exchangeCode("fake-code"),
-    ).rejects.toThrow("invalid_response");
+      new Response(
+        JSON.stringify({
+          access_token: "fake-token",
+        }).replace("}", ',"user_id":17841405793187218}'),
+      );
+    const result = await createInstagramOAuthClient(
+      config,
+      fetcher,
+    ).exchangeCode("fake-code");
+    expect(result.userId).toBe("17841405793187218");
   });
   it("uses unversioned long-token and refresh endpoints, without automatic retry", async () => {
     const requests: string[] = [];

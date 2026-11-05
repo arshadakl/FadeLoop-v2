@@ -6,6 +6,7 @@ import {
   consumeOAuthState,
   createOAuthAttempt,
 } from "@fadeloop/worker-common/meta/oauth-state";
+import { subscribeInstagramAccountToWebhooks } from "@fadeloop/worker-common/meta/webhook-subscription";
 import { apiError } from "../../common/http";
 import { authenticateOwner, getPrimaryAppOrigin } from "../owner/session";
 import { createOwnerStore } from "../owner/storage";
@@ -18,6 +19,7 @@ export interface OAuthRouteEnvironment {
   META_APP_SECRET: string;
   META_REDIRECT_URI: string;
   TOKEN_ENCRYPTION_KEY: string;
+  META_GRAPH_VERSION?: string | undefined;
 }
 
 /**
@@ -135,6 +137,33 @@ export async function handleInstagramCallback(
     // Calculate expiry timestamp
     const expiresAt = now + longLived.expiresIn * 1000;
 
+    // Fetch profile details (username, name, profile picture)
+    let profile: {
+      username?: string | null;
+      name?: string | null;
+      profilePictureUrl?: string | null;
+    } = {};
+    try {
+      const profileUrl = `https://graph.instagram.com/${env.META_GRAPH_VERSION || "v23.0"}/me?fields=id,username,name,profile_picture_url&access_token=${encodeURIComponent(longLived.accessToken)}`;
+      const profileRes = await fetcher(profileUrl, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (profileRes.ok) {
+        const data = (await profileRes.json()) as {
+          username?: string;
+          name?: string;
+          profile_picture_url?: string;
+        };
+        profile = {
+          username: data.username ?? null,
+          name: data.name ?? null,
+          profilePictureUrl: data.profile_picture_url ?? null,
+        };
+      }
+    } catch (profErr) {
+      console.warn("[OAuth] Profile fetch warning:", profErr);
+    }
+
     // 3. Encrypt and store account in D1
     const accountStore = createAccountStore(env.DB, env.TOKEN_ENCRYPTION_KEY);
     const connected = await accountStore.connect({
@@ -143,12 +172,30 @@ export async function handleInstagramCallback(
       accessToken: longLived.accessToken,
       expiresAt,
       now,
+      username: profile.username,
+      name: profile.name,
+      profilePictureUrl: profile.profilePictureUrl,
     });
 
     if (!connected) {
       return Response.redirect(
         `${baseOrigin}/accounts?error=connect_failed`,
         302,
+      );
+    }
+
+    // Automatically subscribe the Instagram account to Meta webhooks (comments, messages)
+    try {
+      await subscribeInstagramAccountToWebhooks(
+        shortLived.userId,
+        longLived.accessToken,
+        env.META_GRAPH_VERSION || "v23.0",
+        fetcher,
+      );
+    } catch (subErr) {
+      console.warn(
+        `[OAuth] Warning: Failed to subscribe account ${shortLived.userId} to webhooks:`,
+        subErr,
       );
     }
 

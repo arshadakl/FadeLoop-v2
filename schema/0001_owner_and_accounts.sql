@@ -30,6 +30,9 @@ CREATE TABLE instagram_accounts (
   token_ciphertext TEXT,
   token_expires_at INTEGER,
   updated_at INTEGER NOT NULL,
+  username TEXT,
+  name TEXT,
+  profile_picture_url TEXT,
   CHECK (status != 'connected' OR (token_ciphertext IS NOT NULL AND token_expires_at IS NOT NULL))
 ) WITHOUT ROWID;
 CREATE INDEX idx_instagram_accounts_workspace ON instagram_accounts(workspace_id, account_id);

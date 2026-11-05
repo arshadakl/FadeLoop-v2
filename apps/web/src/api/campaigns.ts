@@ -1,4 +1,7 @@
-import type { CreateCampaignInput } from "@fadeloop/contracts/campaign";
+import type {
+  CreateCampaignInput,
+  UpdateCampaignInput,
+} from "@fadeloop/contracts/campaign";
 import { getJSON, sendJSON } from "./client";
 
 export interface CampaignData {
@@ -18,6 +21,10 @@ export interface CampaignData {
     keywords: string[];
     replyTemplate: string;
     resourceUrl?: string | null;
+    confirmationButtonEnabled?: boolean;
+    confirmationButtonText?: string;
+    confirmationPromptText?: string | null;
+    commentReplyText?: string | null;
     createdAt: number;
   };
 }
@@ -35,6 +42,7 @@ export interface DeliveryOutcomeData {
   error_code: string | null;
   attempt_count: number;
   occurred_at: number;
+  recipient_username?: string | null;
 }
 
 export interface DeliveriesResponse {
@@ -47,6 +55,16 @@ export async function fetchCampaigns(
 ): Promise<CampaignsResponse> {
   const query = cursor ? `?cursor=${cursor}` : "";
   return getJSON<CampaignsResponse>(`/api/campaigns${query}`, signal);
+}
+
+export async function fetchCampaignById(
+  campaignId: string,
+  signal?: AbortSignal,
+): Promise<CampaignData> {
+  return getJSON<CampaignData>(
+    `/api/campaigns/${encodeURIComponent(campaignId)}`,
+    signal,
+  );
 }
 
 export async function createCampaign(
@@ -65,6 +83,36 @@ export async function toggleCampaignStatus(
     `/api/campaigns/${campaignId}`,
     "PUT",
     { status },
+    signal,
+  );
+}
+
+export async function updateCampaign(
+  campaignId: string,
+  input: UpdateCampaignInput,
+  signal?: AbortSignal,
+): Promise<{
+  success: boolean;
+  status: string;
+  campaign: CampaignData["campaign"];
+  revision: CampaignData["revision"];
+}> {
+  return sendJSON<{
+    success: boolean;
+    status: string;
+    campaign: CampaignData["campaign"];
+    revision: CampaignData["revision"];
+  }>(`/api/campaigns/${campaignId}`, "PUT", input, signal);
+}
+
+export async function deleteCampaign(
+  campaignId: string,
+  signal?: AbortSignal,
+): Promise<{ success: boolean; id: string }> {
+  return sendJSON<{ success: boolean; id: string }>(
+    `/api/campaigns/${campaignId}`,
+    "DELETE",
+    undefined,
     signal,
   );
 }
