@@ -8,20 +8,20 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Profile Metadata + Responsive Accounts Card Live |
-| Current phase | P00-P08-13 DONE; Live comment delivery token decryption fixed |
+| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Public Comment Reply + Postback Opt-in Live |
+| Current phase | P00-P08-14 DONE; Live comment & Step 2 delivery active |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
 | Application/runtime | Single unified worker (apps/server, fadeloop) serving assets, API, ingress, queue consumer, and cron |
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step Button Template & automatic subscribed_apps active |
-| Database | D1 fadeloop-d1 active; migrations 0001, 0002, 0003, 0004 applied; account username/name/profile_picture columns active |
+| Database | D1 fadeloop-d1 active; migrations 0001, 0002, 0003, 0004, 0005 applied; public comment reply columns active |
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
-| Tests/builds/deployment | pnpm check PASS, 91 tests across 21 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
+| Tests/builds/deployment | pnpm check PASS, 93 tests across 22 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Consumer Token Decryption Fix + Responsive Accounts Card |
-| Immediate next action | Live end-to-end verification with comment on live Reel |
+| Active owner | Antigravity: Step 2 Postback Delivery + Public Comment Reply + Deliveries Truncation |
+| Immediate next action | Resync account webhooks and test comment + 'Send Me' button tap on live Reel |
 | Current blockers | None |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 5296235b-4def-44d4-8366-4ac74f469329 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version e909188a-b08f-4e09-b92d-cf9c066d9cc2 |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
