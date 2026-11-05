@@ -9,6 +9,7 @@ import {
 } from "../api/campaigns";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 import { Button } from "../components/ui/button";
+import { ConfirmDialog } from "../components/ui/confirm-dialog";
 
 export default function EditCampaignPage() {
   const { id } = useParams<{ id: string }>();
@@ -543,39 +544,28 @@ export default function EditCampaignPage() {
               </p>
             </div>
 
-            {confirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-destructive font-medium">
-                  Are you sure?
-                </span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deleteMutation.mutate()}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? "Deleting…" : "Yes, Delete"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmDelete(false)}
-                  disabled={deleteMutation.isPending}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmDelete(true)}
-              >
-                Delete Campaign
-              </Button>
-            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete Campaign
+            </Button>
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmDialog
+          isOpen={confirmDelete}
+          title="Delete Campaign?"
+          description="Are you sure you want to delete this campaign? Automated replies for this post will stop immediately and this cannot be undone."
+          confirmText="Delete Campaign"
+          cancelText="Cancel"
+          isDestructive={true}
+          isLoading={deleteMutation.isPending}
+          onConfirm={() => deleteMutation.mutate()}
+          onCancel={() => setConfirmDelete(false)}
+        />
       </div>
     </DashboardLayout>
   );

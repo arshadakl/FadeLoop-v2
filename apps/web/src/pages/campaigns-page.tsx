@@ -10,6 +10,7 @@ import {
 } from "../api/campaigns";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 import { Button } from "../components/ui/button";
+import { ConfirmDialog } from "../components/ui/confirm-dialog";
 
 function CampaignMediaPreview({
   accountId,
@@ -794,71 +795,41 @@ export default function CampaignsPage() {
                       {new Date(campaign.updatedAt).toLocaleDateString()}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {confirmDeleteId === campaign.id ? (
-                        <div className="flex items-center gap-1 bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded">
-                          <span className="text-[11px] text-destructive font-medium mr-1">
-                            Delete?
-                          </span>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteMutation.mutate(campaign.id)}
-                            disabled={deleteMutation.isPending}
-                            className="text-xs h-6 px-2"
-                          >
-                            {deleteMutation.isPending ? "..." : "Yes"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setConfirmDeleteId(null)}
-                            disabled={deleteMutation.isPending}
-                            className="text-xs h-6 px-2"
-                          >
-                            No
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              toggleStatusMutation.mutate({
-                                campaignId: campaign.id,
-                                status:
-                                  campaign.status === "published"
-                                    ? "paused"
-                                    : "published",
-                              })
-                            }
-                            disabled={toggleStatusMutation.isPending}
-                            className="text-xs h-7 px-2.5"
-                          >
-                            {campaign.status === "published"
-                              ? "Pause"
-                              : "Publish"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              navigate(`/campaigns/${campaign.id}/edit`)
-                            }
-                            className="text-xs h-7 px-2.5"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setConfirmDeleteId(campaign.id)}
-                            className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10"
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toggleStatusMutation.mutate({
+                            campaignId: campaign.id,
+                            status:
+                              campaign.status === "published"
+                                ? "paused"
+                                : "published",
+                          })
+                        }
+                        disabled={toggleStatusMutation.isPending}
+                        className="text-xs h-7 px-2.5"
+                      >
+                        {campaign.status === "published" ? "Pause" : "Publish"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/campaigns/${campaign.id}/edit`)
+                        }
+                        className="text-xs h-7 px-2.5"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmDeleteId(campaign.id)}
+                        className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10"
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -867,6 +838,23 @@ export default function CampaignsPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Campaign Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={confirmDeleteId !== null}
+        title="Delete Campaign?"
+        description="Are you sure you want to delete this automation campaign? Automated comment replies for this post will stop immediately and cannot be undone."
+        confirmText="Delete Campaign"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            deleteMutation.mutate(confirmDeleteId);
+          }
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </DashboardLayout>
   );
 }

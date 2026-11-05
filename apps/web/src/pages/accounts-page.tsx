@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   type AccountMetadata,
+  deleteAccount,
   fetchAccounts,
   fetchAccountWebhookStatus,
   initiateInstagramOAuthConnect,
@@ -10,14 +11,17 @@ import {
 } from "../api/accounts";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 import { Button } from "../components/ui/button";
+import { ConfirmDialog } from "../components/ui/confirm-dialog";
 
 function AccountItem({
   acc,
   onReconnect,
+  onDelete,
   isConnecting,
 }: {
   acc: AccountMetadata;
   onReconnect: () => void;
+  onDelete: () => void;
   isConnecting: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -65,16 +69,35 @@ function AccountItem({
 
   return (
     <div className="p-4 bg-card rounded border border-border flex flex-col gap-3 shadow-2xs">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs shrink-0">
-            IG
-          </div>
+          {acc.profile_picture_url ? (
+            <img
+              src={acc.profile_picture_url}
+              alt={acc.username ? `@${acc.username}` : "Instagram Account"}
+              className="w-12 h-12 rounded-full object-cover border border-border shrink-0 shadow-2xs"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-sm shrink-0">
+              {acc.username ? acc.username.slice(0, 2).toUpperCase() : "IG"}
+            </div>
+          )}
+
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-sm text-foreground">
-                Account ID: {acc.account_id}
+              <span className="font-bold text-base text-foreground tracking-tight">
+                {acc.username ? `@${acc.username}` : `ID: ${acc.account_id}`}
               </span>
+
+              {acc.name && (
+                <span className="text-xs text-muted-foreground font-medium">
+                  ({acc.name})
+                </span>
+              )}
+
               <span
                 className={`text-xs px-2 py-0.5 rounded font-medium ${
                   acc.status === "connected" && !isExpired
@@ -104,15 +127,21 @@ function AccountItem({
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {isExpired
-                ? "Reconnection required to resume automated replies"
-                : `Token active · ${daysRemaining} days remaining (auto-refreshed nightly)`}
-            </p>
+
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-2xs font-mono text-muted-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded">
+                ID: {acc.account_id}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {isExpired
+                  ? "Reconnection required to resume automated replies"
+                  : `Token active · ${daysRemaining} days remaining`}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
           <Button
             variant="outline"
             size="sm"
@@ -133,6 +162,16 @@ function AccountItem({
           >
             Reconnect
           </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            title="Disconnect and delete this Instagram account"
+          >
+            Disconnect
+          </Button>
         </div>
       </div>
 
@@ -152,9 +191,12 @@ function AccountItem({
 }
 
 export default function AccountsPage() {
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const isConnectedNotice = searchParams.get("connected") === "true";
   const errorMessage = searchParams.get("error");
+  const [accountToDelete, setAccountToDelete] =
+    useState<AccountMetadata | null>(null);
 
   const accountsQuery = useQuery({
     queryKey: ["accounts"],
@@ -166,6 +208,14 @@ export default function AccountsPage() {
     onSuccess: (authorizeUrl) => {
       // Redirect browser to Meta Instagram OAuth authorization dialog
       window.location.href = authorizeUrl;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (accountId: string) => deleteAccount(accountId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      setAccountToDelete(null);
     },
   });
 
@@ -255,6 +305,7 @@ export default function AccountsPage() {
                   key={acc.account_id}
                   acc={acc}
                   onReconnect={() => connectMutation.mutate()}
+                  onDelete={() => setAccountToDelete(acc)}
                   isConnecting={connectMutation.isPending}
                 />
               ))}
@@ -305,6 +356,27 @@ export default function AccountsPage() {
           </div>
         </div>
       </div>
+
+      {/* Disconnect Account Modal */}
+      <ConfirmDialog
+        isOpen={accountToDelete !== null}
+        title={
+          accountToDelete?.username
+            ? `Disconnect @${accountToDelete.username}?`
+            : `Disconnect Account ${accountToDelete?.account_id}?`
+        }
+        description="Are you sure you want to disconnect this Instagram account? All active campaigns, webhook triggers, and automated reply settings for this account will be permanently removed. This action cannot be undone."
+        confirmText="Disconnect Account"
+        cancelText="Keep Connected"
+        isDestructive={true}
+        isLoading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (accountToDelete) {
+            deleteMutation.mutate(accountToDelete.account_id);
+          }
+        }}
+        onCancel={() => setAccountToDelete(null)}
+      />
     </DashboardLayout>
   );
 }

@@ -23,6 +23,9 @@ describe("Comment campaign matching", () => {
     expect(matchComment("price", baseRevision)).toBe(true);
     expect(matchComment(" PRICE ", baseRevision)).toBe(true);
     expect(matchComment("link", baseRevision)).toBe(true);
+    expect(matchComment("link!", baseRevision)).toBe(true);
+    expect(matchComment("Link.", baseRevision)).toBe(true);
+    expect(matchComment("link❤️", baseRevision)).toBe(true);
     expect(matchComment("what is the price please", baseRevision)).toBe(true);
     expect(matchComment("random text without trigger", baseRevision)).toBe(
       false,

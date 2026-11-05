@@ -59,4 +59,3 @@ describe("Instagram Account Webhook Subscription", () => {
     expect(result.subscribedFields).toEqual(["comments", "messages"]);
   });
 });
-

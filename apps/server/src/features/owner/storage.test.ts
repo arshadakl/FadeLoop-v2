@@ -214,7 +214,7 @@ describe("real local D1 ownership and state", () => {
       .run();
     await db
       .prepare(
-        "WITH RECURSIVE ids(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM ids WHERE n < 1500) INSERT INTO instagram_accounts SELECT 'history-' || n, 'workspace-two', 'fixture', 'disconnected', NULL, NULL, ? FROM ids",
+        "WITH RECURSIVE ids(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM ids WHERE n < 1500) INSERT INTO instagram_accounts (account_id, workspace_id, generation, status, token_ciphertext, token_expires_at, updated_at) SELECT 'history-' || n, 'workspace-two', 'fixture', 'disconnected', NULL, NULL, ? FROM ids",
       )
       .bind(now)
       .run();

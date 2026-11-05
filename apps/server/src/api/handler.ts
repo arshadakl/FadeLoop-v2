@@ -9,6 +9,7 @@ import {
 import {
   handleAccounts,
   handleAccountWebhookSubscription,
+  handleDeleteAccount,
 } from "../features/accounts/routes";
 import {
   handleCampaignItem,
@@ -137,13 +138,49 @@ export async function handleApiRequest(
     }
   }
 
-  // Instagram Accounts metadata
+  // Instagram Accounts metadata (GET list)
   if (path === "/api/accounts") {
     if (!env.DB) return unavailable();
     try {
-      return await handleAccounts(request, env.DB, Date.now());
+      return await handleAccounts(
+        request,
+        {
+          DB: env.DB,
+          ...(env.TOKEN_ENCRYPTION_KEY
+            ? { TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY }
+            : {}),
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        Date.now(),
+        fetch,
+      );
     } catch {
       console.error("Account metadata storage unavailable");
+      return unavailable();
+    }
+  }
+
+  // Single Instagram Account Item (DELETE /api/accounts/:id)
+  const accountItemMatch = /^\/api\/accounts\/(\d+)$/.exec(path);
+  if (accountItemMatch?.[1]) {
+    if (!env.DB || !env.TOKEN_ENCRYPTION_KEY) return unavailable();
+    try {
+      return await handleDeleteAccount(
+        request,
+        {
+          DB: env.DB,
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
+          ...(env.META_GRAPH_VERSION
+            ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
+            : {}),
+        },
+        accountItemMatch[1],
+        Date.now(),
+      );
+    } catch (err) {
+      console.error("Account delete error:", err);
       return unavailable();
     }
   }

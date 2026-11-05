@@ -86,4 +86,3 @@ export async function getInstagramAccountWebhookSubscriptions(
     json.data?.flatMap((d) => d.subscribed_fields ?? []) ?? [];
   return { subscribedFields };
 }
-

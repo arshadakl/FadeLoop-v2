@@ -99,31 +99,33 @@ export async function processQueueMessage(
     }
 
     // Look up connected Instagram account and verify token validity
-    const account = await store.findConnectedAccount(event.accountId);
+    const account = await store.findConnectedAccount(active.campaign.accountId);
     if (!account) {
       console.warn(
-        `[Consumer] Account ${event.accountId} is not connected or missing token.`,
+        `[Consumer] Account ${active.campaign.accountId} is not connected or missing token.`,
       );
       message.ack();
       return;
     }
 
     if (account.tokenExpiresAt <= now) {
-      console.warn(`[Consumer] Account ${event.accountId} token has expired.`);
+      console.warn(
+        `[Consumer] Account ${active.campaign.accountId} token has expired.`,
+      );
       message.ack();
       return;
     }
 
     const isConfirmationEnabled =
       active.revision.confirmationButtonEnabled === true;
-    const actionKey = `${event.accountId}:${event.commentId}`;
+    const actionKey = `${active.campaign.accountId}:${event.commentId}`;
 
     // Atomic claim in D1: guarantees only 1 delivery per (account_id, comment_id)
     const claimResult = await store.claimDelivery(
       {
         actionKey,
         workspaceId: active.campaign.workspaceId,
-        accountId: event.accountId,
+        accountId: active.campaign.accountId,
         commentId: event.commentId,
         mediaId: event.mediaId,
         campaignId: active.campaign.id,
@@ -143,14 +145,17 @@ export async function processQueueMessage(
     let accessToken: string;
     try {
       const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
-      accessToken = await vault.open(account.tokenCiphertext, event.accountId);
+      accessToken = await vault.open(
+        account.tokenCiphertext,
+        active.campaign.accountId,
+      );
     } catch (err) {
       console.error("[Consumer] Failed to decrypt account token:", err);
       await store.recordOutcome({
         id: crypto.randomUUID(),
         actionKey,
         workspaceId: active.campaign.workspaceId,
-        accountId: event.accountId,
+        accountId: active.campaign.accountId,
         status: "failed",
         errorCode: "TOKEN_DECRYPT_FAIL",
         attemptCount: message.attempts,
@@ -179,7 +184,7 @@ export async function processQueueMessage(
       result = await sendInstagramPrivateReply(
         {
           graphVersion: env.META_GRAPH_VERSION,
-          accountId: event.accountId,
+          accountId: active.campaign.accountId,
           accessToken,
           commentId: event.commentId,
           text: promptText,
@@ -207,7 +212,7 @@ export async function processQueueMessage(
       result = await sendInstagramPrivateReply(
         {
           graphVersion: env.META_GRAPH_VERSION,
-          accountId: event.accountId,
+          accountId: active.campaign.accountId,
           accessToken,
           commentId: event.commentId,
           text: replyText,
@@ -223,7 +228,7 @@ export async function processQueueMessage(
       message,
       actionKey,
       active.campaign.workspaceId,
-      event.accountId,
+      active.campaign.accountId,
       now,
     );
   }

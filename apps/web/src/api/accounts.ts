@@ -4,10 +4,22 @@ export interface AccountMetadata {
   account_id: string;
   status: "connected" | "disconnected";
   token_expires_at: number | null;
+  username?: string | null;
+  name?: string | null;
+  profile_picture_url?: string | null;
 }
 
 export interface AccountsResponse {
   accounts: AccountMetadata[];
+}
+
+export async function deleteAccount(
+  accountId: string,
+): Promise<{ ok: boolean; deleted: boolean; accountId: string }> {
+  return sendJSON<{ ok: boolean; deleted: boolean; accountId: string }>(
+    `/api/accounts/${encodeURIComponent(accountId)}`,
+    "DELETE",
+  );
 }
 
 export interface WebhookSubscriptionStatus {

@@ -24,15 +24,20 @@ export function matchComment(
   }
 
   const normalizedComment = trimmed.toLowerCase();
-  const commentWords = normalizedComment.split(/\s+/);
+  const rawWords = normalizedComment.split(/\s+/);
+  const cleanedWords = normalizedComment
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 
   for (const kw of revision.keywords) {
     const normalizedKw = kw.trim().toLowerCase();
     if (!normalizedKw) continue;
-    // Exact match or matches a specific token
+    // Exact match or matches a specific token (even with attached punctuation or emojis)
     if (
       normalizedComment === normalizedKw ||
-      commentWords.includes(normalizedKw)
+      rawWords.includes(normalizedKw) ||
+      cleanedWords.includes(normalizedKw)
     ) {
       return true;
     }

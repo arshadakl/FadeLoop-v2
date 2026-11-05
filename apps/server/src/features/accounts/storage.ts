@@ -22,11 +22,14 @@ export function listAccounts(
     account_id: string;
     status: string;
     token_expires_at: number | null;
+    username: string | null;
+    name: string | null;
+    profile_picture_url: string | null;
   }>(
     "accounts.list",
     db
       .prepare(
-        "SELECT account_id, status, token_expires_at FROM instagram_accounts WHERE workspace_id = ? AND account_id > ? ORDER BY account_id LIMIT 50",
+        "SELECT account_id, status, token_expires_at, username, name, profile_picture_url FROM instagram_accounts WHERE workspace_id = ? AND account_id > ? ORDER BY account_id LIMIT 50",
       )
       .bind(workspaceId, after),
   );
@@ -45,6 +48,9 @@ export function createAccountStore(
       accessToken: string;
       expiresAt: number;
       now: number;
+      username?: string | null | undefined;
+      name?: string | null | undefined;
+      profilePictureUrl?: string | null | undefined;
     }): Promise<boolean> {
       if (
         !Number.isSafeInteger(input.expiresAt) ||
@@ -59,10 +65,13 @@ export function createAccountStore(
       const rows = await query<{ account_id: string }>(
         "accounts.connect",
         db
-          .prepare(`INSERT INTO instagram_accounts (account_id, workspace_id, generation, status, token_ciphertext, token_expires_at, updated_at)
-        VALUES (?, ?, ?, 'connected', ?, ?, ?)
+          .prepare(`INSERT INTO instagram_accounts (account_id, workspace_id, generation, status, token_ciphertext, token_expires_at, updated_at, username, name, profile_picture_url)
+        VALUES (?, ?, ?, 'connected', ?, ?, ?, ?, ?, ?)
         ON CONFLICT (account_id) DO UPDATE SET generation = excluded.generation, status = excluded.status,
-        token_ciphertext = excluded.token_ciphertext, token_expires_at = excluded.token_expires_at, updated_at = excluded.updated_at
+        token_ciphertext = excluded.token_ciphertext, token_expires_at = excluded.token_expires_at, updated_at = excluded.updated_at,
+        username = COALESCE(excluded.username, instagram_accounts.username),
+        name = COALESCE(excluded.name, instagram_accounts.name),
+        profile_picture_url = COALESCE(excluded.profile_picture_url, instagram_accounts.profile_picture_url)
         WHERE instagram_accounts.workspace_id = excluded.workspace_id RETURNING account_id`)
           .bind(
             input.accountId,
@@ -71,7 +80,54 @@ export function createAccountStore(
             ciphertext,
             input.expiresAt,
             input.now,
+            input.username ?? null,
+            input.name ?? null,
+            input.profilePictureUrl ?? null,
           ),
+      );
+      return rows.length === 1;
+    },
+    async updateProfile(
+      workspaceId: string,
+      accountId: string,
+      profile: {
+        username?: string | null | undefined;
+        name?: string | null | undefined;
+        profilePictureUrl?: string | null | undefined;
+      },
+    ): Promise<boolean> {
+      const rows = await query<{ account_id: string }>(
+        "accounts.update_profile",
+        db
+          .prepare(
+            `UPDATE instagram_accounts
+             SET username = COALESCE(?, username),
+                 name = COALESCE(?, name),
+                 profile_picture_url = COALESCE(?, profile_picture_url)
+             WHERE account_id = ? AND workspace_id = ?
+             RETURNING account_id`,
+          )
+          .bind(
+            profile.username ?? null,
+            profile.name ?? null,
+            profile.profilePictureUrl ?? null,
+            accountId,
+            workspaceId,
+          ),
+      );
+      return rows.length === 1;
+    },
+    async deleteAccount(
+      workspaceId: string,
+      accountId: string,
+    ): Promise<boolean> {
+      const rows = await query<{ account_id: string }>(
+        "accounts.delete",
+        db
+          .prepare(
+            "DELETE FROM instagram_accounts WHERE account_id = ? AND workspace_id = ? RETURNING account_id",
+          )
+          .bind(accountId, workspaceId),
       );
       return rows.length === 1;
     },

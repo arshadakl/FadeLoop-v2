@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { sessionCookie, sessionDigest } from "../owner/session";
 import { createOwnerStore } from "../owner/storage";
 import { handleInstagramCallback, handleInstagramConnect } from "./oauth";
-import { handleAccountWebhookSubscription } from "./routes";
+import {
+  handleAccounts,
+  handleAccountWebhookSubscription,
+  handleDeleteAccount,
+} from "./routes";
 import { createAccountStore } from "./storage";
 
 const ownerId = "22222222-2222-4222-8222-222222222222";
@@ -264,5 +268,89 @@ describe("Instagram OAuth Handshake", () => {
     expect(getData.ok).toBe(true);
     expect(getData.subscribed).toBe(true);
     expect(getData.subscribedFields).toEqual(["comments", "messages"]);
+  });
+
+  it("auto-enriches Instagram profile (@username, name, avatar) when listing accounts and deletes account on DELETE", async () => {
+    const mockFetcher = vi.fn(async (url: string) => {
+      if (url.includes("/me?fields=")) {
+        return Response.json({
+          id: "987654321",
+          username: "creatortest",
+          name: "Creator Test Studio",
+          profile_picture_url: "https://example.com/avatar.jpg",
+        });
+      }
+      return new Response("Not Found", { status: 404 });
+    });
+
+    const routeEnv = {
+      DB: db,
+      TOKEN_ENCRYPTION_KEY: encryptionKey,
+      META_GRAPH_VERSION: "v23.0",
+    };
+
+    // 1. GET /api/accounts
+    const listReq = new Request("https://v2.test/api/accounts", {
+      headers: {
+        cookie: sessionCookie(sessionToken, 3600, true),
+      },
+    });
+
+    const listRes = await handleAccounts(
+      listReq,
+      routeEnv,
+      now,
+      mockFetcher as unknown as typeof fetch,
+    );
+
+    expect(listRes.status).toBe(200);
+    const listData = (await listRes.json()) as {
+      accounts: Array<{
+        account_id: string;
+        username?: string | null;
+        name?: string | null;
+        profile_picture_url?: string | null;
+      }>;
+    };
+    expect(listData.accounts).toHaveLength(1);
+    expect(listData.accounts[0]?.username).toBe("creatortest");
+    expect(listData.accounts[0]?.name).toBe("Creator Test Studio");
+    expect(listData.accounts[0]?.profile_picture_url).toBe(
+      "https://example.com/avatar.jpg",
+    );
+
+    // 2. DELETE /api/accounts/987654321
+    const delReq = new Request("https://v2.test/api/accounts/987654321", {
+      method: "DELETE",
+      headers: {
+        cookie: sessionCookie(sessionToken, 3600, true),
+      },
+    });
+
+    const delRes = await handleDeleteAccount(
+      delReq,
+      routeEnv,
+      "987654321",
+      now,
+    );
+    expect(delRes.status).toBe(200);
+    const delData = (await delRes.json()) as { ok: boolean; deleted: boolean };
+    expect(delData.ok).toBe(true);
+    expect(delData.deleted).toBe(true);
+
+    // 3. Confirm account no longer exists in D1
+    const postDelReq = new Request("https://v2.test/api/accounts", {
+      headers: {
+        cookie: sessionCookie(sessionToken, 3600, true),
+      },
+    });
+    const postDelRes = await handleAccounts(
+      postDelReq,
+      routeEnv,
+      now,
+      mockFetcher as unknown as typeof fetch,
+    );
+    const postDelData = (await postDelRes.json()) as { accounts: unknown[] };
+    expect(postDelData.accounts).toHaveLength(0);
   });
 });

@@ -71,7 +71,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
       accountId: string,
       mediaId: string,
     ): Promise<ActiveCampaignWithRevision | null> {
-      const rows = await query<{
+      let rows = await query<{
         c_id: string;
         c_workspace_id: string;
         c_account_id: string;
@@ -110,6 +110,32 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
           )
           .bind(accountId, mediaId),
       );
+
+      // Fallback: If not found by (accountId, mediaId), try by unique mediaId alone
+      if (rows.length === 0) {
+        rows = await query(
+          "campaigns.find_active_for_media_fallback",
+          db
+            .prepare(
+              `SELECT
+                c.id AS c_id, c.workspace_id AS c_workspace_id, c.account_id AS c_account_id,
+                c.media_id AS c_media_id, c.status AS c_status, c.created_at AS c_created_at,
+                c.updated_at AS c_updated_at,
+                r.id AS r_id, r.match_mode AS r_match_mode, r.keywords_json AS r_keywords_json,
+                r.reply_template AS r_reply_template, r.resource_url AS r_resource_url,
+                r.confirmation_button_enabled AS r_confirmation_button_enabled,
+                r.confirmation_button_text AS r_confirmation_button_text,
+                r.confirmation_prompt_text AS r_confirmation_prompt_text,
+                r.created_at AS r_created_at
+              FROM campaigns c
+              JOIN campaign_revisions r ON r.campaign_id = c.id
+              WHERE c.media_id = ? AND c.status = 'published'
+              ORDER BY r.created_at DESC
+              LIMIT 1`,
+            )
+            .bind(mediaId),
+        );
+      }
 
       const row = rows[0];
       if (!row) return null;
