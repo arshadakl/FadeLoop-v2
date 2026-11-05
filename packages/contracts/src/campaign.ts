@@ -27,6 +27,7 @@ export const campaignRevisionSchema = z.strictObject({
   confirmationButtonEnabled: z.boolean().default(true),
   confirmationButtonText: z.string().min(1).max(20).default("Send Me"),
   confirmationPromptText: z.string().max(1000).nullable().optional(),
+  commentReplyText: z.string().max(1000).nullable().optional(),
   createdAt: z.number().int().nonnegative(),
 });
 export type CampaignRevision = z.infer<typeof campaignRevisionSchema>;
@@ -54,6 +55,7 @@ export const createCampaignInputSchema = z.strictObject({
   confirmationButtonEnabled: z.boolean().default(true),
   confirmationButtonText: z.string().min(1).max(20).default("Send Me"),
   confirmationPromptText: z.string().max(1000).nullable().optional(),
+  commentReplyText: z.string().max(1000).nullable().optional(),
 });
 export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 
@@ -73,5 +75,6 @@ export const updateCampaignInputSchema = z.strictObject({
   confirmationButtonEnabled: z.boolean().optional(),
   confirmationButtonText: z.string().min(1).max(20).optional(),
   confirmationPromptText: z.string().max(1000).nullable().optional(),
+  commentReplyText: z.string().max(1000).nullable().optional(),
 });
 export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;

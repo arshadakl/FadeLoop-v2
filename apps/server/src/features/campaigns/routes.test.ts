@@ -54,6 +54,13 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0005 = await readFile(
+    new URL(
+      "../../../../../schema/0005_comment_reply_text.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -72,6 +79,7 @@ beforeAll(async () => {
   await applySql(sql0001);
   await applySql(sql0002);
   await applySql(sql0003);
+  await applySql(sql0005);
 
   // Setup workspace, account, and owner session
   await db

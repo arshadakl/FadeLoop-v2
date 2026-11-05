@@ -24,6 +24,7 @@ export interface CampaignData {
     confirmationButtonEnabled?: boolean;
     confirmationButtonText?: string;
     confirmationPromptText?: string | null;
+    commentReplyText?: string | null;
     createdAt: number;
   };
 }

@@ -27,6 +27,7 @@ export default function EditCampaignPage() {
   const [keywordsText, setKeywordsText] = useState("");
   const [replyTemplate, setReplyTemplate] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
+  const [commentReplyText, setCommentReplyText] = useState("");
 
   // 2-Step interactive "Send Me" button flow (Default: enabled)
   const [confirmationButtonEnabled, setConfirmationButtonEnabled] =
@@ -63,6 +64,7 @@ export default function EditCampaignPage() {
       setKeywordsText(revision.keywords ? revision.keywords.join(", ") : "");
       setReplyTemplate(revision.replyTemplate);
       setResourceUrl(revision.resourceUrl || "");
+      setCommentReplyText(revision.commentReplyText || "");
       setConfirmationButtonEnabled(
         revision.confirmationButtonEnabled !== undefined
           ? Boolean(revision.confirmationButtonEnabled)
@@ -98,6 +100,7 @@ export default function EditCampaignPage() {
         confirmationButtonText:
           confirmationButtonText.trim().slice(0, 20) || "Send Me",
         confirmationPromptText: confirmationPromptText.trim() || null,
+        commentReplyText: commentReplyText.trim() || null,
       });
     },
     onSuccess: async () => {
@@ -448,6 +451,28 @@ export default function EditCampaignPage() {
                 onChange={(e) => setResourceUrl(e.target.value)}
                 className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
               />
+            </div>
+
+            {/* Public Comment Reply */}
+            <div>
+              <label
+                htmlFor="input-comment-reply"
+                className="block text-xs font-medium text-foreground mb-1.5"
+              >
+                Public Comment Reply (Optional)
+              </label>
+              <input
+                id="input-comment-reply"
+                type="text"
+                placeholder="e.g. Sent to your DM! Check your inbox 📩"
+                value={commentReplyText}
+                onChange={(e) => setCommentReplyText(e.target.value)}
+                className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Automatically posted as a public reply directly under the user's
+                comment on Instagram.
+              </p>
             </div>
 
             {/* Actions */}

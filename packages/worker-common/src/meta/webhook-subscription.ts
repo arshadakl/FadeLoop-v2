@@ -20,7 +20,7 @@ export async function subscribeInstagramAccountToWebhooks(
   graphVersion: string = "v23.0",
   fetcher: typeof fetch = fetch,
 ): Promise<WebhookSubscriptionResult> {
-  const fields = "comments,messages";
+  const fields = "comments,messages,messaging_postbacks";
   const url = new URL(
     `https://graph.instagram.com/${graphVersion}/${accountId}/subscribed_apps`,
   );
@@ -50,7 +50,7 @@ export async function subscribeInstagramAccountToWebhooks(
   );
   return {
     success: json.success ?? true,
-    subscribedFields: ["comments", "messages"],
+    subscribedFields: ["comments", "messages", "messaging_postbacks"],
   };
 }
 

@@ -107,12 +107,22 @@ export default function DeliveriesPage() {
                         </td>
                         <td className="py-3 px-4 font-mono text-[11px]">
                           {d.provider_message_id ? (
-                            <span className="text-primary font-medium">
-                              {d.provider_message_id}
+                            <span
+                              className="text-primary font-medium cursor-help"
+                              title={d.provider_message_id}
+                            >
+                              {d.provider_message_id.length > 14
+                                ? `${d.provider_message_id.slice(0, 10)}…`
+                                : d.provider_message_id}
                             </span>
                           ) : d.error_code ? (
-                            <span className="text-destructive font-semibold">
-                              {d.error_code}
+                            <span
+                              className="text-destructive font-semibold cursor-help"
+                              title={d.error_code}
+                            >
+                              {d.error_code.length > 18
+                                ? `${d.error_code.slice(0, 15)}…`
+                                : d.error_code}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>

@@ -29,10 +29,16 @@ describe("Instagram Account Webhook Subscription", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(result.subscribedFields).toEqual(["comments", "messages"]);
+    expect(result.subscribedFields).toEqual([
+      "comments",
+      "messages",
+      "messaging_postbacks",
+    ]);
     expect(capturedMethod).toBe("POST");
     expect(capturedUrl).toContain("/17841400000000001/subscribed_apps");
-    expect(capturedUrl).toContain("subscribed_fields=comments%2Cmessages");
+    expect(capturedUrl).toContain(
+      "subscribed_fields=comments%2Cmessages%2Cmessaging_postbacks",
+    );
     expect(capturedUrl).toContain("access_token=test_access_token");
   });
 

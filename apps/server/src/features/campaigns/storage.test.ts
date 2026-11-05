@@ -39,6 +39,13 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0005 = await readFile(
+    new URL(
+      "../../../../../schema/0005_comment_reply_text.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     // Strip comments
@@ -58,6 +65,7 @@ beforeAll(async () => {
   await applySql(sql0001);
   await applySql(sql0002);
   await applySql(sql0003);
+  await applySql(sql0005);
 
   // Set up workspace & connected Instagram account
   await db

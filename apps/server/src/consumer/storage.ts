@@ -87,6 +87,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
         r_confirmation_button_enabled: number | null;
         r_confirmation_button_text: string | null;
         r_confirmation_prompt_text: string | null;
+        r_comment_reply_text: string | null;
         r_created_at: number;
       }>(
         "campaigns.find_active_for_media",
@@ -101,6 +102,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
               r.confirmation_button_enabled AS r_confirmation_button_enabled,
               r.confirmation_button_text AS r_confirmation_button_text,
               r.confirmation_prompt_text AS r_confirmation_prompt_text,
+              r.comment_reply_text AS r_comment_reply_text,
               r.created_at AS r_created_at
             FROM campaigns c
             JOIN campaign_revisions r ON r.campaign_id = c.id
@@ -126,6 +128,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
                 r.confirmation_button_enabled AS r_confirmation_button_enabled,
                 r.confirmation_button_text AS r_confirmation_button_text,
                 r.confirmation_prompt_text AS r_confirmation_prompt_text,
+                r.comment_reply_text AS r_comment_reply_text,
                 r.created_at AS r_created_at
               FROM campaigns c
               JOIN campaign_revisions r ON r.campaign_id = c.id
@@ -167,6 +170,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
           confirmationButtonEnabled: row.r_confirmation_button_enabled === 1,
           confirmationButtonText: row.r_confirmation_button_text || "Send Me",
           confirmationPromptText: row.r_confirmation_prompt_text ?? undefined,
+          commentReplyText: row.r_comment_reply_text ?? undefined,
           createdAt: row.r_created_at,
         },
       };
@@ -194,6 +198,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
         r_confirmation_button_enabled: number | null;
         r_confirmation_button_text: string | null;
         r_confirmation_prompt_text: string | null;
+        r_comment_reply_text: string | null;
         r_created_at: number;
       }>(
         "campaigns.find_active_by_id",
@@ -208,6 +213,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
               r.confirmation_button_enabled AS r_confirmation_button_enabled,
               r.confirmation_button_text AS r_confirmation_button_text,
               r.confirmation_prompt_text AS r_confirmation_prompt_text,
+              r.comment_reply_text AS r_comment_reply_text,
               r.created_at AS r_created_at
             FROM campaigns c
             JOIN campaign_revisions r ON r.campaign_id = c.id
@@ -248,6 +254,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
           confirmationButtonEnabled: row.r_confirmation_button_enabled === 1,
           confirmationButtonText: row.r_confirmation_button_text || "Send Me",
           confirmationPromptText: row.r_confirmation_prompt_text ?? undefined,
+          commentReplyText: row.r_comment_reply_text ?? undefined,
           createdAt: row.r_created_at,
         },
       };

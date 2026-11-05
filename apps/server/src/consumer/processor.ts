@@ -4,6 +4,7 @@ import {
   matchComment,
 } from "@fadeloop/domain/matching";
 import type { QueryObserver } from "@fadeloop/worker-common/database";
+import { postInstagramCommentReply } from "@fadeloop/worker-common/meta/comment-reply-client";
 import { sendInstagramPrivateReply } from "@fadeloop/worker-common/meta/private-reply-client";
 import { createTokenVault } from "@fadeloop/worker-common/meta/token-vault";
 import { createConsumerStore } from "./storage";
@@ -231,6 +232,29 @@ export async function processQueueMessage(
       );
     }
 
+    // Optional public reply under the comment
+    if (active.revision.commentReplyText?.trim()) {
+      try {
+        console.log(
+          `[Consumer] Posting public comment reply to comment ${event.commentId}`,
+        );
+        await postInstagramCommentReply(
+          {
+            graphVersion: env.META_GRAPH_VERSION,
+            commentId: event.commentId,
+            accessToken,
+            text: active.revision.commentReplyText.trim(),
+          },
+          fetcher,
+        );
+      } catch (commentReplyErr) {
+        console.warn(
+          `[Consumer] Failed to post public reply to comment ${event.commentId}:`,
+          commentReplyErr,
+        );
+      }
+    }
+
     // Record outcome and settle queue message
     return settleOutcome(
       result,
@@ -270,30 +294,30 @@ export async function processQueueMessage(
     );
 
     const active = await store.findActiveCampaignById(campaignId);
-    if (!active || active.campaign.accountId !== event.accountId) {
+    if (!active) {
       console.warn(
-        `[Consumer] Campaign ${campaignId} not found or account mismatch; dropping.`,
+        `[Consumer] Campaign ${campaignId} not found or inactive; dropping.`,
       );
       message.ack();
       return;
     }
 
-    const account = await store.findConnectedAccount(event.accountId);
+    const account = await store.findConnectedAccount(active.campaign.accountId);
     if (!account || account.tokenExpiresAt <= now) {
       console.warn(
-        `[Consumer] Account ${event.accountId} is not connected or token expired.`,
+        `[Consumer] Account ${active.campaign.accountId} is not connected or token expired.`,
       );
       message.ack();
       return;
     }
 
     // Step 2 atomic claim: keyed by recipient messagingUserId and campaign
-    const actionKey = `${event.accountId}:${event.messagingUserId}:${campaignId}:step2`;
+    const actionKey = `${active.campaign.accountId}:${event.messagingUserId}:${campaignId}:step2`;
     const claimResult = await store.claimDelivery(
       {
         actionKey,
         workspaceId: active.campaign.workspaceId,
-        accountId: event.accountId,
+        accountId: active.campaign.accountId,
         commentId: `step2:${event.messagingUserId}:${campaignId}`,
         mediaId: active.campaign.mediaId,
         campaignId: active.campaign.id,
@@ -324,7 +348,7 @@ export async function processQueueMessage(
       } catch {
         accessToken = await vault.open(
           account.tokenCiphertext,
-          event.accountId,
+          active.campaign.accountId,
         );
       }
     } catch (err) {
@@ -336,7 +360,7 @@ export async function processQueueMessage(
         id: crypto.randomUUID(),
         actionKey,
         workspaceId: active.campaign.workspaceId,
-        accountId: event.accountId,
+        accountId: active.campaign.accountId,
         status: "failed",
         errorCode: "TOKEN_DECRYPT_FAIL",
         attemptCount: message.attempts,
@@ -359,7 +383,7 @@ export async function processQueueMessage(
     const result = await sendInstagramPrivateReply(
       {
         graphVersion: env.META_GRAPH_VERSION,
-        accountId: event.accountId,
+        accountId: active.campaign.accountId,
         accessToken,
         messagingUserId: event.messagingUserId,
         text: replyText,
@@ -373,7 +397,7 @@ export async function processQueueMessage(
       message,
       actionKey,
       active.campaign.workspaceId,
-      event.accountId,
+      active.campaign.accountId,
       now,
     );
   }
