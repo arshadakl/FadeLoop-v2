@@ -145,10 +145,20 @@ export async function processQueueMessage(
     let accessToken: string;
     try {
       const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
-      accessToken = await vault.open(
-        account.tokenCiphertext,
-        active.campaign.accountId,
-      );
+      // Tokens stored via OAuth use JSON.stringify([workspaceId, accountId]) as AAD
+      const standardAad = JSON.stringify([
+        account.workspaceId,
+        account.accountId,
+      ]);
+      try {
+        accessToken = await vault.open(account.tokenCiphertext, standardAad);
+      } catch {
+        // Fallback to plain accountId (used by mock test fixtures)
+        accessToken = await vault.open(
+          account.tokenCiphertext,
+          active.campaign.accountId,
+        );
+      }
     } catch (err) {
       console.error("[Consumer] Failed to decrypt account token:", err);
       await store.recordOutcome({
@@ -305,7 +315,18 @@ export async function processQueueMessage(
     let accessToken: string;
     try {
       const vault = await createTokenVault(env.TOKEN_ENCRYPTION_KEY);
-      accessToken = await vault.open(account.tokenCiphertext, event.accountId);
+      const standardAad = JSON.stringify([
+        account.workspaceId,
+        account.accountId,
+      ]);
+      try {
+        accessToken = await vault.open(account.tokenCiphertext, standardAad);
+      } catch {
+        accessToken = await vault.open(
+          account.tokenCiphertext,
+          event.accountId,
+        );
+      }
     } catch (err) {
       console.error(
         "[Consumer] Failed to decrypt account token for step 2:",

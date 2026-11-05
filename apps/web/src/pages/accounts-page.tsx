@@ -69,8 +69,8 @@ function AccountItem({
 
   return (
     <div className="p-4 bg-card rounded border border-border flex flex-col gap-3 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3.5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
           {acc.profile_picture_url ? (
             <img
               src={acc.profile_picture_url}
@@ -86,20 +86,20 @@ function AccountItem({
             </div>
           )}
 
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-base text-foreground tracking-tight">
+              <span className="font-bold text-base text-foreground tracking-tight truncate max-w-[200px] sm:max-w-none">
                 {acc.username ? `@${acc.username}` : `ID: ${acc.account_id}`}
               </span>
 
               {acc.name && (
-                <span className="text-xs text-muted-foreground font-medium">
+                <span className="text-xs text-muted-foreground font-medium truncate max-w-[150px] sm:max-w-none">
                   ({acc.name})
                 </span>
               )}
 
               <span
-                className={`text-xs px-2 py-0.5 rounded font-medium ${
+                className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
                   acc.status === "connected" && !isExpired
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                     : "bg-destructive/10 text-destructive border border-destructive/20"
@@ -109,27 +109,27 @@ function AccountItem({
               </span>
 
               {webhookQuery.isLoading ? (
-                <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground animate-pulse">
+                <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground animate-pulse shrink-0">
                   Checking webhook…
                 </span>
               ) : isSubscribed ? (
-                <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-medium">
+                <span
+                  className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-medium shrink-0"
+                  title={`Subscribed fields: ${webhookQuery.data?.subscribedFields.join(", ")}`}
+                >
                   <span>⚡</span>
-                  <span>
-                    Webhooks Active (
-                    {webhookQuery.data?.subscribedFields.join(", ")})
-                  </span>
+                  <span>Webhooks Active</span>
                 </span>
               ) : (
-                <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 font-medium">
+                <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 font-medium shrink-0">
                   <span>⚠️</span>
                   <span>Webhook Not Subscribed</span>
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xs font-mono text-muted-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="text-2xs font-mono text-muted-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
                 ID: {acc.account_id}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -141,13 +141,13 @@ function AccountItem({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+        <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0 border-t border-border/40 lg:border-t-0 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={() => syncWebhookMutation.mutate()}
             disabled={syncWebhookMutation.isPending || isExpired}
-            className="text-xs h-7 px-2.5"
+            className="text-xs h-7 px-2.5 whitespace-nowrap"
             title="Subscribe account to Meta Graph webhook events (comments, messages)"
           >
             {syncWebhookMutation.isPending ? "Syncing…" : "⚡ Sync Webhooks"}
@@ -158,7 +158,7 @@ function AccountItem({
             size="sm"
             onClick={onReconnect}
             disabled={isConnecting}
-            className="text-xs h-7 px-2.5"
+            className="text-xs h-7 px-2.5 whitespace-nowrap"
           >
             Reconnect
           </Button>
@@ -167,7 +167,7 @@ function AccountItem({
             variant="ghost"
             size="sm"
             onClick={onDelete}
-            className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive whitespace-nowrap"
             title="Disconnect and delete this Instagram account"
           >
             Disconnect
@@ -299,7 +299,7 @@ export default function AccountsPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-3">
               {accountsQuery.data.accounts.map((acc) => (
                 <AccountItem
                   key={acc.account_id}

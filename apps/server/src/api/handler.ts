@@ -146,9 +146,7 @@ export async function handleApiRequest(
         request,
         {
           DB: env.DB,
-          ...(env.TOKEN_ENCRYPTION_KEY
-            ? { TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY }
-            : {}),
+          TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY,
           ...(env.META_GRAPH_VERSION
             ? { META_GRAPH_VERSION: env.META_GRAPH_VERSION }
             : {}),

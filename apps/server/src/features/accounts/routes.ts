@@ -25,12 +25,13 @@ export async function handleAccounts(
   if (after.length > 1024) return apiError("INVALID_REQUEST", 400);
 
   const accounts = await listAccounts(env.DB, session.workspaceId, after);
+  const accountStore = env.TOKEN_ENCRYPTION_KEY
+    ? createAccountStore(env.DB, env.TOKEN_ENCRYPTION_KEY)
+    : null;
+  const graphVersion = env.META_GRAPH_VERSION || "v23.0";
 
-  // Auto-enrich profile details (username, name, profile image) if token vault is configured
-  if (env.TOKEN_ENCRYPTION_KEY) {
-    const accountStore = createAccountStore(env.DB, env.TOKEN_ENCRYPTION_KEY);
-    const graphVersion = env.META_GRAPH_VERSION || "v23.0";
-
+  // Auto-enrich profile details (username, name, profile image) if not yet cached
+  if (accountStore) {
     for (const acc of accounts) {
       if (!acc.username && acc.status === "connected") {
         try {
@@ -92,6 +93,8 @@ export async function handleDeleteAccount(
   const session = await authenticateOwner(request, env.DB, now);
   if (!session) return apiError("UNAUTHENTICATED", 401);
 
+  if (!env.TOKEN_ENCRYPTION_KEY) return apiError("SERVICE_UNAVAILABLE", 503);
+
   const accountStore = createAccountStore(env.DB, env.TOKEN_ENCRYPTION_KEY);
   const deleted = await accountStore.deleteAccount(
     session.workspaceId,
@@ -116,6 +119,7 @@ export async function handleAccountWebhookSubscription(
 ): Promise<Response> {
   const session = await authenticateOwner(request, env.DB, now);
   if (!session) return apiError("UNAUTHENTICATED", 401);
+  if (!env.TOKEN_ENCRYPTION_KEY) return apiError("SERVICE_UNAVAILABLE", 503);
 
   const accountStore = createAccountStore(env.DB, env.TOKEN_ENCRYPTION_KEY);
   const creds = await accountStore.readCredential(
