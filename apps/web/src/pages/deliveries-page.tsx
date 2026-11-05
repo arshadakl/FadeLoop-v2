@@ -98,7 +98,26 @@ export default function DeliveriesPage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 font-mono text-[11px]">
-                          <div className="text-foreground font-semibold">
+                          {d.recipient_username ? (
+                            <div className="mb-1 flex items-center gap-1.5 font-sans">
+                              <a
+                                href={`https://instagram.com/${d.recipient_username}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline text-xs"
+                                title={`Open @${d.recipient_username} on Instagram`}
+                              >
+                                <span>@{d.recipient_username}</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  ↗
+                                </span>
+                              </a>
+                            </div>
+                          ) : null}
+                          <div
+                            className="text-foreground font-semibold truncate max-w-xs"
+                            title={d.action_key}
+                          >
                             {d.action_key}
                           </div>
                           <div className="text-[10px] text-muted-foreground">

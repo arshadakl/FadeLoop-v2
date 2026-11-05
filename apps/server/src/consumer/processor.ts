@@ -171,6 +171,7 @@ export async function processQueueMessage(
         errorCode: "TOKEN_DECRYPT_FAIL",
         attemptCount: message.attempts,
         occurredAt: now,
+        recipientUsername: event.fromUsername,
       });
       message.ack();
       return;
@@ -264,6 +265,7 @@ export async function processQueueMessage(
       active.campaign.workspaceId,
       active.campaign.accountId,
       now,
+      event.fromUsername,
     );
   }
 
@@ -418,6 +420,7 @@ async function settleOutcome(
   workspaceId: string,
   accountId: string,
   now: number,
+  recipientUsername?: string,
 ): Promise<void> {
   if (result.status === "sent") {
     console.log(`[Consumer] Delivery successful: ${actionKey}`);
@@ -430,6 +433,7 @@ async function settleOutcome(
       providerMessageId: result.providerMessageId,
       attemptCount: message.attempts,
       occurredAt: now,
+      recipientUsername,
     });
     message.ack();
     return;
@@ -448,6 +452,7 @@ async function settleOutcome(
       ...(result.errorCode ? { errorCode: result.errorCode } : {}),
       attemptCount: message.attempts,
       occurredAt: now,
+      recipientUsername,
     });
     message.ack();
     return;
@@ -466,6 +471,7 @@ async function settleOutcome(
       errorCode: "NETWORK_TIMEOUT",
       attemptCount: message.attempts,
       occurredAt: now,
+      recipientUsername,
     });
     message.ack();
     return;
@@ -483,6 +489,7 @@ async function settleOutcome(
     status: "retryable",
     attemptCount: message.attempts,
     occurredAt: now,
+    recipientUsername,
   });
 
   const delay =

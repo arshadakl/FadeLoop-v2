@@ -42,6 +42,7 @@ export interface DeliveryOutcomeData {
   error_code: string | null;
   attempt_count: number;
   occurred_at: number;
+  recipient_username?: string | null;
 }
 
 export interface DeliveriesResponse {

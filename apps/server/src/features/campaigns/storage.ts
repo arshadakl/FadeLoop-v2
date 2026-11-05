@@ -627,12 +627,13 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
         error_code: string | null;
         attempt_count: number;
         occurred_at: number;
+        recipient_username: string | null;
       }>(
         "deliveries.list_workspace",
         cursorOccurredAt
           ? db
               .prepare(
-                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at
+                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at, recipient_username
                  FROM delivery_outcomes
                  WHERE workspace_id = ? AND occurred_at < ?
                  ORDER BY occurred_at DESC
@@ -641,7 +642,7 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
               .bind(workspaceId, cursorOccurredAt, boundedLimit)
           : db
               .prepare(
-                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at
+                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at, recipient_username
                  FROM delivery_outcomes
                  WHERE workspace_id = ?
                  ORDER BY occurred_at DESC
@@ -664,6 +665,7 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
       errorCode?: string;
       attemptCount: number;
       occurredAt: number;
+      recipientUsername?: string | undefined;
     }): Promise<void> {
       await query(
         "deliveries.outcome_insert",
@@ -671,8 +673,9 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
           .prepare(
             `INSERT INTO delivery_outcomes (
               id, action_key, workspace_id, account_id, status,
-              provider_message_id, error_code, attempt_count, occurred_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              provider_message_id, error_code, attempt_count, occurred_at,
+              recipient_username
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .bind(
             input.id,
@@ -684,6 +687,7 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
             input.errorCode ?? null,
             input.attemptCount,
             input.occurredAt,
+            input.recipientUsername ?? null,
           ),
       );
     },

@@ -110,6 +110,15 @@ export function normalizeWebhookPayload(
           continue;
         }
 
+        const fromUsername =
+          typeof val.from?.username === "string" && val.from.username.trim()
+            ? val.from.username.trim()
+            : undefined;
+        const fromUserId =
+          typeof val.from?.id === "string" && val.from.id.trim()
+            ? val.from.id.trim()
+            : undefined;
+
         events.push({
           schemaVersion: 1,
           kind: "comment.created",
@@ -118,6 +127,8 @@ export function normalizeWebhookPayload(
           mediaId,
           commentId,
           text,
+          fromUsername,
+          fromUserId,
           occurredAt: entryTime,
           receivedAt,
         });

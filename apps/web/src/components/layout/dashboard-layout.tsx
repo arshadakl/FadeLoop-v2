@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useOwner } from "../../features/auth/hooks/use-owner";
 import { useTheme } from "../../hooks/use-theme";
 import { Button } from "../ui/button";
@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { session, logout } = useOwner();
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   const navItems = [
@@ -81,7 +82,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => logout.mutate()}
+                  onClick={() => {
+                    logout.mutate(undefined, {
+                      onSuccess: () => {
+                        navigate("/login", { replace: true });
+                      },
+                    });
+                  }}
                   disabled={logout.isPending}
                   className="text-xs h-8 px-2.5 border-border text-muted-foreground hover:text-foreground"
                 >

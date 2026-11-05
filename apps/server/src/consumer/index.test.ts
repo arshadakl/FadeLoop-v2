@@ -43,6 +43,13 @@ beforeAll(async () => {
     new URL("../../../../schema/0005_comment_reply_text.sql", import.meta.url),
     "utf8",
   );
+  const sql0006 = await readFile(
+    new URL(
+      "../../../../schema/0006_delivery_recipient_username.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -62,6 +69,7 @@ beforeAll(async () => {
   await applySql(sql0002);
   await applySql(sql0003);
   await applySql(sql0005);
+  await applySql(sql0006);
 
   // Set up workspace & connected Instagram account with encrypted token
   await db

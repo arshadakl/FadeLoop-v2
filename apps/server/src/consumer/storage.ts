@@ -334,6 +334,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
       errorCode?: string;
       attemptCount: number;
       occurredAt: number;
+      recipientUsername?: string | undefined;
     }): Promise<void> {
       await query(
         "deliveries.outcome_insert",
@@ -341,8 +342,9 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
           .prepare(
             `INSERT INTO delivery_outcomes (
               id, action_key, workspace_id, account_id, status,
-              provider_message_id, error_code, attempt_count, occurred_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              provider_message_id, error_code, attempt_count, occurred_at,
+              recipient_username
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .bind(
             input.id,
@@ -354,6 +356,7 @@ export function createConsumerStore(db: D1Database, observer?: QueryObserver) {
             input.errorCode ?? null,
             input.attemptCount,
             input.occurredAt,
+            input.recipientUsername ?? null,
           ),
       );
     },
