@@ -296,6 +296,7 @@ describe("Campaigns & Deliveries Routes", () => {
         resourceUrl: "https://example.com/updated",
         confirmationButtonEnabled: true,
         confirmationButtonText: "Claim Now",
+        commentReplyText: "Check your DMs! 📩",
       }),
     });
 
@@ -314,6 +315,7 @@ describe("Campaigns & Deliveries Routes", () => {
         keywords: string[];
         replyTemplate: string;
         confirmationButtonText: string;
+        commentReplyText?: string | null;
       };
     };
     expect(editJson.success).toBe(true);
@@ -321,6 +323,7 @@ describe("Campaigns & Deliveries Routes", () => {
     expect(editJson.revision.keywords).toEqual(["updated", "keyword"]);
     expect(editJson.revision.replyTemplate).toBe("Updated reply message here");
     expect(editJson.revision.confirmationButtonText).toBe("Claim Now");
+    expect(editJson.revision.commentReplyText).toBe("Check your DMs! 📩");
   });
 
   it("lists delivery history", async () => {

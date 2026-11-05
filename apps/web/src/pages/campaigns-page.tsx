@@ -640,6 +640,27 @@ export default function CampaignsPage() {
                   </p>
                 </div>
 
+                <div>
+                  <label
+                    htmlFor="input-comment-reply"
+                    className="block text-xs font-medium text-foreground mb-1.5"
+                  >
+                    Public Comment Reply (Optional)
+                  </label>
+                  <input
+                    id="input-comment-reply"
+                    type="text"
+                    placeholder="e.g. Sent to your DM! Check your inbox 📩"
+                    value={commentReplyText}
+                    onChange={(e) => setCommentReplyText(e.target.value)}
+                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Automatically posted as a public reply directly under the
+                    user's comment on Instagram.
+                  </p>
+                </div>
+
                 <div className="pt-2">
                   <Button
                     onClick={() => createMutation.mutate()}

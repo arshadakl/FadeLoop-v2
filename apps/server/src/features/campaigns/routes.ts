@@ -70,6 +70,7 @@ export async function handleCampaigns(
       confirmationButtonEnabled,
       confirmationButtonText,
       confirmationPromptText,
+      commentReplyText,
     } = parsed.data;
 
     // Normalize keywords to lowercase
@@ -92,6 +93,7 @@ export async function handleCampaigns(
           confirmationButtonEnabled,
           confirmationButtonText,
           confirmationPromptText,
+          commentReplyText,
           ...(resourceUrl !== undefined ? { resourceUrl } : {}),
         },
         now,
@@ -198,6 +200,7 @@ export async function handleCampaignItem(
           confirmationButtonEnabled: parsed.data.confirmationButtonEnabled,
           confirmationButtonText: parsed.data.confirmationButtonText,
           confirmationPromptText: parsed.data.confirmationPromptText,
+          commentReplyText: parsed.data.commentReplyText,
         },
         now,
       });

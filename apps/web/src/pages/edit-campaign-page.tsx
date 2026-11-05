@@ -27,7 +27,9 @@ export default function EditCampaignPage() {
   const [keywordsText, setKeywordsText] = useState("");
   const [replyTemplate, setReplyTemplate] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
-  const [commentReplyText, setCommentReplyText] = useState("");
+  const [commentReplyText, setCommentReplyText] = useState(
+    "Sent to your DM! Check your inbox 📩",
+  );
 
   // 2-Step interactive "Send Me" button flow (Default: enabled)
   const [confirmationButtonEnabled, setConfirmationButtonEnabled] =
@@ -64,7 +66,10 @@ export default function EditCampaignPage() {
       setKeywordsText(revision.keywords ? revision.keywords.join(", ") : "");
       setReplyTemplate(revision.replyTemplate);
       setResourceUrl(revision.resourceUrl || "");
-      setCommentReplyText(revision.commentReplyText || "");
+      setCommentReplyText(
+        revision.commentReplyText?.trim() ||
+          "Sent to your DM! Check your inbox 📩",
+      );
       setConfirmationButtonEnabled(
         revision.confirmationButtonEnabled !== undefined
           ? Boolean(revision.confirmationButtonEnabled)

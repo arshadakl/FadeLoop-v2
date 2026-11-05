@@ -4,3 +4,4 @@
 -- this public reply under their comment (e.g. "Sent to your DM! Check your inbox 📩").
 
 ALTER TABLE campaign_revisions ADD COLUMN comment_reply_text TEXT;
+
