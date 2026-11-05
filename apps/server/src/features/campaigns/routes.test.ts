@@ -68,6 +68,13 @@ beforeAll(async () => {
     ),
     "utf8",
   );
+  const sql0007 = await readFile(
+    new URL(
+      "../../../../../schema/0007_campaigns_media_lookup_index.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   const applySql = async (sql: string) => {
     const cleanSql = sql
@@ -88,6 +95,7 @@ beforeAll(async () => {
   await applySql(sql0003);
   await applySql(sql0005);
   await applySql(sql0006);
+  await applySql(sql0007);
 
   // Setup workspace, account, and owner session
   await db
