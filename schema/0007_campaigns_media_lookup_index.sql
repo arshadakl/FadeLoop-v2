@@ -3,3 +3,4 @@
 -- Filtered with WHERE status = 'published' to ensure zero index write overhead for paused campaigns.
 
 CREATE INDEX idx_campaigns_published_media_lookup ON campaigns(media_id) WHERE status = 'published';
+

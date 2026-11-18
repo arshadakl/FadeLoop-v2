@@ -4,92 +4,174 @@ import { useNavigate } from "react-router-dom";
 import { fetchAccountMedia, fetchAccounts } from "../api/accounts";
 import {
   createCampaign,
-  deleteCampaign,
   fetchCampaigns,
   fetchDeliveries,
-  toggleCampaignStatus,
 } from "../api/campaigns";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 import { Button } from "../components/ui/button";
-import { ConfirmDialog } from "../components/ui/confirm-dialog";
 
-function CampaignMediaPreview({
-  accountId,
-  mediaId,
-}: {
-  accountId: string;
-  mediaId: string;
-}) {
+interface CampaignRowProps {
+  campaign: {
+    id: string;
+    accountId: string;
+    mediaId: string;
+    status: "published" | "paused";
+    createdAt: number | string;
+    updatedAt: number | string;
+  };
+  revision: {
+    matchMode: "exact_keyword" | "any_comment";
+    keywords: string[];
+    replyTemplate: string;
+    resourceUrl?: string | null;
+    confirmationButtonEnabled?: boolean;
+    confirmationButtonText?: string | null;
+    confirmationPromptText?: string | null;
+    commentReplyText?: string | null;
+  };
+  sentCount: number;
+  onEdit: () => void;
+}
+
+function CampaignRow({
+  campaign,
+  revision,
+  sentCount,
+  onEdit,
+}: CampaignRowProps) {
   const mediaQuery = useQuery({
-    queryKey: ["account-media", accountId],
-    queryFn: ({ signal }) => fetchAccountMedia(accountId, signal),
+    queryKey: ["account-media", campaign.accountId],
+    queryFn: ({ signal }) => fetchAccountMedia(campaign.accountId, signal),
     staleTime: 5 * 60 * 1000,
   });
 
-  const item = mediaQuery.data?.media.find((m) => m.id === mediaId);
-
-  if (!item) {
-    return (
-      <div className="flex items-center justify-between text-xs font-mono text-muted-foreground bg-muted/30 px-2.5 py-2 rounded border border-border">
-        <span>Media ID: {mediaId}</span>
-      </div>
-    );
-  }
+  const item = mediaQuery.data?.media.find((m) => m.id === campaign.mediaId);
 
   return (
-    <div className="flex items-start gap-2.5 p-2 rounded-md border border-border bg-muted/30">
-      <div className="relative w-12 h-12 rounded overflow-hidden bg-muted shrink-0 border border-border">
-        {item.thumbnail_url || item.media_url ? (
-          <img
-            src={item.thumbnail_url || item.media_url}
-            alt={item.caption || "Post thumbnail"}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-            IG
-          </div>
-        )}
-        {item.media_type === "VIDEO" && (
-          <span className="absolute bottom-0.5 right-0.5 bg-black/85 text-[8px] font-bold text-white px-1 rounded">
-            ▶
-          </span>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-[10px] uppercase font-semibold text-primary">
-            {item.media_type === "VIDEO" ? "Reel" : "Post"}
-          </span>
-          {item.permalink && (
-            <a
-              href={item.permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-muted-foreground hover:text-foreground underline truncate"
-            >
-              Instagram ↗
-            </a>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 hover:bg-muted/40 transition-colors">
+      {/* Left: Thumbnail & Media Information */}
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
+          {item?.thumbnail_url || item?.media_url ? (
+            <img
+              src={item.thumbnail_url || item.media_url}
+              alt={item.caption || "Post thumbnail"}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-muted-foreground uppercase bg-muted/60">
+              IG
+            </div>
+          )}
+          {item?.media_type === "VIDEO" && (
+            <span className="absolute bottom-0.5 right-0.5 bg-black/85 text-[8px] font-bold text-white px-1 rounded">
+              ▶
+            </span>
           )}
         </div>
-        <p className="text-xs text-foreground font-medium line-clamp-1 mt-0.5 leading-snug">
-          {item.caption || `Media ID: ${mediaId}`}
-        </p>
-        <span className="text-[10px] font-mono text-muted-foreground">
-          {mediaId}
-        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-foreground truncate max-w-md">
+              {item?.caption || `Media ID: ${campaign.mediaId}`}
+            </p>
+            {item?.permalink && (
+              <a
+                href={item.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground text-xs shrink-0 transition-colors"
+                title="View on Instagram"
+              >
+                ↗
+              </a>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className="text-[11px] font-mono text-muted-foreground">
+              ID: {campaign.mediaId.slice(0, 10)}…
+            </span>
+            <span className="text-muted-foreground/30">•</span>
+
+            {revision.matchMode === "any_comment" ? (
+              <span className="text-[11px] font-semibold text-primary bg-primary/15 border border-primary/25 px-2 py-0.5 rounded-full">
+                Any comment
+              </span>
+            ) : (
+              <span className="text-[11px] text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-full border border-border truncate max-w-[240px]">
+                Trigger:{" "}
+                <strong className="text-foreground font-semibold">
+                  {revision.keywords.slice(0, 3).join(", ")}
+                </strong>
+                {revision.keywords.length > 3
+                  ? ` +${revision.keywords.length - 3}`
+                  : ""}
+              </span>
+            )}
+
+            {revision.confirmationButtonEnabled && (
+              <span className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+                ⚡ 2-Step ({revision.confirmationButtonText || "Send Me"})
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Status badge, sent metric & Edit button */}
+      <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border">
+        <div className="flex items-center gap-2.5">
+          {sentCount > 0 && (
+            <span className="text-xs font-semibold px-2 py-0.5 bg-muted text-foreground rounded-full border border-border tabular-nums">
+              {sentCount} sent
+            </span>
+          )}
+
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+              campaign.status === "published"
+                ? "bg-primary/15 text-primary border border-primary/25"
+                : "bg-muted text-muted-foreground border border-border"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                campaign.status === "published"
+                  ? "bg-primary"
+                  : "bg-muted-foreground"
+              }`}
+            />
+            {campaign.status === "published" ? "Published" : "Paused"}
+          </span>
+
+          <span className="text-[11px] font-mono text-muted-foreground hidden lg:inline-block">
+            {new Date(campaign.updatedAt).toLocaleDateString()}
+          </span>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
+          className="text-xs font-semibold h-8 px-3 rounded-lg hover:border-primary hover:text-primary transition-colors"
+        >
+          Edit
+        </Button>
       </div>
     </div>
   );
 }
 
+const PAGE_SIZE = 8;
+
 export default function CampaignsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Form states
   const [selectedAccountId, setSelectedAccountId] = useState("");
@@ -151,6 +233,29 @@ export default function CampaignsPage() {
 
   const selectedMedia = mediaQuery.data?.media.find((m) => m.id === mediaId);
 
+  const accounts = accountsQuery.data?.accounts || [];
+
+  // Automatically select the first connected account when accounts list arrives
+  useEffect(() => {
+    if (!selectedAccountId && accounts.length > 0 && accounts[0]) {
+      setSelectedAccountId(accounts[0].account_id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  // Sort campaigns latest first (by updatedAt descending)
+  const sortedCampaigns = [...(campaignsQuery.data?.campaigns ?? [])].sort(
+    (a, b) =>
+      new Date(b.campaign.updatedAt).getTime() -
+      new Date(a.campaign.updatedAt).getTime(),
+  );
+
+  const totalCampaigns = sortedCampaigns.length;
+  const totalPages = Math.ceil(totalCampaigns / PAGE_SIZE) || 1;
+  const paginatedCampaigns = sortedCampaigns.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
   const handleOpenCreate = () => {
     setFormError(null);
     const first = accounts[0];
@@ -210,52 +315,18 @@ export default function CampaignsPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (campaignId: string) => deleteCampaign(campaignId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      setConfirmDeleteId(null);
-    },
-    onError: (err: Error) => {
-      alert(err.message || "Failed to delete campaign");
-      setConfirmDeleteId(null);
-    },
-  });
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: ({
-      campaignId,
-      status,
-    }: {
-      campaignId: string;
-      status: "published" | "paused";
-    }) => toggleCampaignStatus(campaignId, status),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-    },
-  });
-
-  const accounts = accountsQuery.data?.accounts || [];
-
-  // Automatically select the first connected account when accounts list arrives
-  useEffect(() => {
-    if (!selectedAccountId && accounts.length > 0 && accounts[0]) {
-      setSelectedAccountId(accounts[0].account_id);
-    }
-  }, [accounts, selectedAccountId]);
-
   return (
     <DashboardLayout>
       <div className="space-y-8 font-sans">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground">
               Automation Campaigns
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Configure keyword triggers for Instagram posts and reels to
-              deliver instant private replies.
+              Deliver instant private links and comment replies to Instagram
+              commenters.
             </p>
           </div>
 
@@ -270,10 +341,10 @@ export default function CampaignsPage() {
 
         {/* Campaign Creation Drawer / Modal */}
         {isEditorOpen && (
-          <div className="p-6 bg-card rounded-md border border-border shadow-xs space-y-6">
+          <div className="p-6 bg-card rounded-xl border border-border shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-lg font-semibold font-heading text-foreground">
                   Create New Automation Campaign
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -284,14 +355,14 @@ export default function CampaignsPage() {
               <button
                 type="button"
                 onClick={handleCloseEditor}
-                className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted"
+                className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-md hover:bg-muted transition-colors"
               >
                 ✕ Cancel
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 rounded bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
                 {formError}
               </div>
             )}
@@ -302,7 +373,7 @@ export default function CampaignsPage() {
                 <div>
                   <label
                     htmlFor="select-account"
-                    className="block text-xs font-medium text-foreground mb-1.5"
+                    className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
                   >
                     Connected Instagram Account
                   </label>
@@ -310,7 +381,7 @@ export default function CampaignsPage() {
                     id="select-account"
                     value={selectedAccountId}
                     onChange={(e) => setSelectedAccountId(e.target.value)}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     {accounts.length === 0 ? (
                       <option value="">No accounts connected</option>
@@ -328,7 +399,7 @@ export default function CampaignsPage() {
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="input-media-id"
-                      className="block text-xs font-medium text-foreground"
+                      className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >
                       Target Post or Reel
                     </label>
@@ -346,21 +417,21 @@ export default function CampaignsPage() {
                   {!isManualMediaInput ? (
                     <div className="space-y-2">
                       {mediaQuery.isLoading ? (
-                        <div className="p-4 rounded border border-border bg-background text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                        <div className="p-4 rounded-lg border border-border bg-background text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
                           <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          Loading recent Posts and Reels...
+                          Loading recent Instagram posts…
                         </div>
                       ) : mediaQuery.isError ? (
-                        <div className="p-3 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
+                        <div className="p-3 rounded-lg border border-border bg-background text-xs text-muted-foreground">
                           Could not fetch media list. You can enter the Media ID
                           manually.
                         </div>
-                      ) : (mediaQuery.data?.media.length || 0) === 0 ? (
-                        <div className="p-4 rounded border border-border bg-background text-center text-xs text-muted-foreground">
-                          No posts or reels found on this account.
+                      ) : (mediaQuery.data?.media.length ?? 0) === 0 ? (
+                        <div className="p-3 rounded-lg border border-border bg-background text-xs text-muted-foreground text-center">
+                          No recent posts found for this account.
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto p-2 rounded border border-border bg-background">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto p-1 border border-border rounded-lg bg-background">
                           {mediaQuery.data?.media.map((item) => {
                             const isSelected = mediaId === item.id;
                             return (
@@ -368,38 +439,33 @@ export default function CampaignsPage() {
                                 key={item.id}
                                 type="button"
                                 onClick={() => setMediaId(item.id)}
-                                className={`group relative text-left rounded overflow-hidden border transition-all p-1.5 flex flex-col gap-1 ${
+                                className={`group relative rounded-md border text-left overflow-hidden flex flex-col transition-all p-1.5 ${
                                   isSelected
-                                    ? "border-primary bg-primary/10 ring-1 ring-primary"
+                                    ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary"
                                     : "border-border bg-card hover:border-muted-foreground"
                                 }`}
                               >
-                                <div className="relative aspect-square w-full rounded overflow-hidden bg-muted">
+                                <div className="relative aspect-square w-full rounded overflow-hidden bg-muted mb-1.5">
                                   {item.thumbnail_url || item.media_url ? (
                                     <img
                                       src={item.thumbnail_url || item.media_url}
                                       alt={item.caption || "Instagram media"}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                      className="w-full h-full object-cover"
                                       loading="lazy"
                                     />
                                   ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                                      No preview
+                                    <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
+                                      IG
                                     </div>
                                   )}
                                   {item.media_type === "VIDEO" && (
-                                    <span className="absolute top-1 right-1 bg-black/80 text-[10px] font-semibold text-white px-1.5 py-0.2 rounded">
+                                    <span className="absolute bottom-1 right-1 bg-black/80 text-[9px] font-bold text-white px-1 rounded">
                                       ▶ Reel
                                     </span>
                                   )}
-                                  {isSelected && (
-                                    <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground font-bold text-[10px] px-1.5 py-0.2 rounded">
-                                      ✓ Selected
-                                    </span>
-                                  )}
                                 </div>
-                                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight px-0.5">
-                                  {item.caption || `Media ID: ${item.id}`}
+                                <p className="text-[11px] line-clamp-2 text-foreground font-medium leading-tight">
+                                  {item.caption || `Post ${item.id}`}
                                 </p>
                               </button>
                             );
@@ -407,112 +473,67 @@ export default function CampaignsPage() {
                         </div>
                       )}
 
-                      {/* Prominent Selected Post Preview */}
-                      {selectedMedia ? (
-                        <div className="flex items-center gap-3 p-2.5 rounded-md border border-primary/30 bg-primary/5 dark:bg-primary/10">
-                          <div className="relative w-12 h-12 rounded overflow-hidden bg-muted shrink-0 border border-border">
-                            {selectedMedia.thumbnail_url ||
-                            selectedMedia.media_url ? (
-                              <img
-                                src={
-                                  selectedMedia.thumbnail_url ||
-                                  selectedMedia.media_url
-                                }
-                                alt={selectedMedia.caption || "Selected media"}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[10px]">
-                                IG
-                              </div>
-                            )}
-                            {selectedMedia.media_type === "VIDEO" && (
-                              <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] font-bold text-white px-1 rounded">
-                                ▶
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-semibold text-primary">
-                                Selected{" "}
-                                {selectedMedia.media_type === "VIDEO"
-                                  ? "Reel"
-                                  : "Post"}
-                              </span>
-                              {selectedMedia.permalink && (
-                                <a
-                                  href={selectedMedia.permalink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[10px] text-muted-foreground hover:text-foreground underline"
-                                >
-                                  Instagram ↗
-                                </a>
-                              )}
-                            </div>
-                            <p className="text-xs text-foreground line-clamp-1 mt-0.5 font-medium">
-                              {selectedMedia.caption ||
-                                `ID: ${selectedMedia.id}`}
-                            </p>
-                          </div>
-                        </div>
-                      ) : mediaId ? (
-                        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-                          <span>
-                            Selected ID:{" "}
-                            <span className="font-mono text-foreground font-semibold">
-                              {mediaId}
-                            </span>
+                      {selectedMedia && (
+                        <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border flex items-center justify-between">
+                          <span className="truncate">
+                            Selected:{" "}
+                            <strong>
+                              {selectedMedia.caption || selectedMedia.id}
+                            </strong>
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => setMediaId("")}
-                            className="text-destructive hover:underline text-[11px]"
-                          >
-                            Clear
-                          </button>
+                          {selectedMedia.permalink && (
+                            <a
+                              href={selectedMedia.permalink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline text-[11px] ml-2 shrink-0 font-medium"
+                            >
+                              View ↗
+                            </a>
+                          )}
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   ) : (
                     <div>
                       <input
                         id="input-media-id"
                         type="text"
-                        placeholder="e.g. 18012345678901234"
+                        placeholder="e.g. 17912345678901234"
                         value={mediaId}
                         onChange={(e) => setMediaId(e.target.value)}
-                        className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                        className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                       />
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        Meta enforces strictly ONE published campaign per
-                        post/reel.
+                        Find the Media ID via Meta Graph API or your Instagram
+                        feed.
                       </p>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <span className="block text-xs font-medium text-foreground mb-1.5">
-                    Match Mode
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                    Trigger Mode
                   </span>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
                       <input
                         type="radio"
+                        name="createMatchMode"
                         checked={matchMode === "exact_keyword"}
                         onChange={() => setMatchMode("exact_keyword")}
                       />
-                      Exact Keywords
+                      <span>Exact Keywords</span>
                     </label>
                     <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
                       <input
                         type="radio"
+                        name="createMatchMode"
                         checked={matchMode === "any_comment"}
                         onChange={() => setMatchMode("any_comment")}
                       />
-                      Any Comment
+                      <span>Any Comment</span>
                     </label>
                   </div>
                 </div>
@@ -528,16 +549,19 @@ export default function CampaignsPage() {
                     <input
                       id="input-keywords"
                       type="text"
-                      placeholder="e.g. guide, link, send, info"
+                      placeholder="e.g. guide, link, send, price"
                       value={keywordsText}
                       onChange={(e) => setKeywordsText(e.target.value)}
-                      className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                      className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                     />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Case-insensitive match against incoming comments.
+                    </p>
                   </div>
                 )}
 
                 {/* 2-Step Interactive Opt-in ("Send Me" button) */}
-                <div className="p-3.5 rounded border border-primary/20 bg-primary/5 dark:bg-primary/10 space-y-3">
+                <div className="p-3.5 rounded-lg border border-primary/20 bg-primary/5 space-y-3">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -552,9 +576,9 @@ export default function CampaignsPage() {
                         Enable 2-Step interactive "Send Me" button (Recommended)
                       </span>
                       <span className="block text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                        Sends a Quick Reply button first. When the user taps it,
-                        Instagram opens a 24-hour interaction window and
-                        delivers the link without triggering Meta spam flags.
+                        Sends a quick reply button first. When tapped, Instagram
+                        opens a 24-hour interaction window and delivers your
+                        link without triggering Meta spam flags.
                       </span>
                     </div>
                   </label>
@@ -576,7 +600,7 @@ export default function CampaignsPage() {
                           onChange={(e) =>
                             setConfirmationButtonText(e.target.value)
                           }
-                          className="w-full bg-card border border-border rounded px-2.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                          className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
                           placeholder="Send Me"
                         />
                       </div>
@@ -594,7 +618,7 @@ export default function CampaignsPage() {
                           onChange={(e) =>
                             setConfirmationPromptText(e.target.value)
                           }
-                          className="w-full bg-card border border-border rounded px-2.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                          className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
                           placeholder="Tap below to receive your link 👇"
                         />
                       </div>
@@ -614,7 +638,7 @@ export default function CampaignsPage() {
                     rows={3}
                     value={replyTemplate}
                     onChange={(e) => setReplyTemplate(e.target.value)}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
                   />
                 </div>
 
@@ -631,7 +655,7 @@ export default function CampaignsPage() {
                     placeholder="https://yourbrand.com/resource"
                     value={resourceUrl}
                     onChange={(e) => setResourceUrl(e.target.value)}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
 
@@ -648,7 +672,7 @@ export default function CampaignsPage() {
                     placeholder="e.g. Sent to your DM! Check your inbox 📩"
                     value={commentReplyText}
                     onChange={(e) => setCommentReplyText(e.target.value)}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">
                     Automatically posted as a public reply directly under the
@@ -676,14 +700,14 @@ export default function CampaignsPage() {
               </div>
 
               {/* Live Preview Simulator */}
-              <div className="flex flex-col justify-center items-center p-6 bg-muted/40 rounded border border-border">
+              <div className="flex flex-col justify-center items-center p-6 bg-muted/30 rounded-xl border border-border">
                 <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-4">
                   Instagram Direct Message Simulation
                 </span>
 
-                <div className="w-full max-w-xs rounded-md bg-card border border-border p-4 shadow-sm space-y-3">
+                <div className="w-full max-w-xs rounded-xl bg-card border border-border p-4 shadow-sm space-y-3">
                   <div className="flex items-center gap-2 pb-2 border-b border-border">
-                    <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center text-[10px] font-bold">
+                    <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
                       IG
                     </div>
                     <span className="text-xs font-semibold text-foreground">
@@ -693,18 +717,18 @@ export default function CampaignsPage() {
 
                   {confirmationButtonEnabled ? (
                     <div className="space-y-2">
-                      <div className="bg-muted rounded-md p-2.5 text-xs text-foreground">
+                      <div className="bg-muted rounded-lg p-2.5 text-xs text-foreground">
                         <p>
                           {confirmationPromptText ||
                             "Tap below to receive your link 👇"}
                         </p>
                       </div>
                       <div className="flex justify-end">
-                        <span className="inline-block bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded shadow-xs">
+                        <span className="inline-block bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-md shadow-xs">
                           {confirmationButtonText || "Send Me"}
                         </span>
                       </div>
-                      <div className="bg-primary/10 border border-primary/30 rounded-md p-2.5 text-xs text-foreground mt-2">
+                      <div className="bg-primary/10 border border-primary/20 rounded-lg p-2.5 text-xs text-foreground mt-2">
                         <p>{replyTemplate}</p>
                         {resourceUrl && (
                           <p className="mt-1 font-medium underline break-all text-primary">
@@ -714,7 +738,7 @@ export default function CampaignsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-primary/10 border border-primary/30 rounded-md p-2.5 text-xs text-foreground">
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-2.5 text-xs text-foreground">
                       <p>
                         {replyTemplate ||
                           "Your message preview will appear here…"}
@@ -727,7 +751,7 @@ export default function CampaignsPage() {
                     </div>
                   )}
 
-                  <span className="text-[10px] text-muted-foreground block text-right">
+                  <span className="text-[10px] text-muted-foreground block text-right font-mono">
                     Delivered instantly · Just now
                   </span>
                 </div>
@@ -736,23 +760,30 @@ export default function CampaignsPage() {
           </div>
         )}
 
-        {/* Existing Campaigns List */}
+        {/* Campaigns List (Row format, latest first, 8 per page pagination) */}
         <div className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground">
-            Active & Paused Campaigns
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold font-heading text-foreground">
+              Configured Automations ({totalCampaigns})
+            </h2>
+            {totalCampaigns > 0 && (
+              <span className="text-xs text-muted-foreground">
+                Showing {paginatedCampaigns.length} of {totalCampaigns}
+              </span>
+            )}
+          </div>
 
           {campaignsQuery.isPending ? (
-            <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded border border-border">
+            <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
               Loading campaigns…
             </div>
           ) : campaignsQuery.isError ? (
-            <div className="p-8 text-center text-sm text-destructive bg-destructive/10 rounded border border-destructive/20">
+            <div className="p-8 text-center text-sm text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
               Failed to load campaigns.
             </div>
-          ) : campaignsQuery.data.campaigns.length === 0 ? (
-            <div className="p-12 text-center bg-card rounded border border-dashed border-border">
-              <h3 className="font-semibold text-base text-foreground">
+          ) : totalCampaigns === 0 ? (
+            <div className="p-12 text-center bg-card rounded-xl border border-dashed border-border">
+              <h3 className="font-semibold font-heading text-base text-foreground">
                 No Automations Configured
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto mt-1 mb-5">
@@ -762,148 +793,69 @@ export default function CampaignsPage() {
               <Button onClick={handleOpenCreate}>+ Create Campaign</Button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {campaignsQuery.data.campaigns.map(({ campaign, revision }) => (
-                <div
-                  key={campaign.id}
-                  className="p-4 bg-card rounded border border-border flex flex-col justify-between shadow-2xs hover:border-muted-foreground transition-colors space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          campaign.status === "published"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                        }`}
-                      >
-                        {campaign.status}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {(campaignSentCounts[campaign.id] ?? 0) > 0 && (
-                          <span className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded font-semibold border border-primary/20">
-                            {campaignSentCounts[campaign.id]} sent
-                          </span>
-                        )}
-                        <span className="text-[11px] font-mono text-muted-foreground">
-                          {campaign.accountId.slice(0, 8)}…
-                        </span>
-                      </div>
-                    </div>
+            <>
+              {/* Row style list container */}
+              <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden shadow-2xs">
+                {paginatedCampaigns.map(({ campaign, revision }) => (
+                  <CampaignRow
+                    key={campaign.id}
+                    campaign={campaign}
+                    revision={revision}
+                    sentCount={campaignSentCounts[campaign.id] ?? 0}
+                    onEdit={() => navigate(`/campaigns/${campaign.id}/edit`)}
+                  />
+                ))}
+              </div>
 
-                    {/* Rich Post Preview */}
-                    <CampaignMediaPreview
-                      accountId={campaign.accountId}
-                      mediaId={campaign.mediaId}
-                    />
-
-                    {revision.confirmationButtonEnabled && (
-                      <div className="inline-flex items-center gap-1 bg-primary/10 border border-primary/20 text-foreground text-[11px] font-medium px-2 py-0.5 rounded">
-                        <span>⚡ 2-Step Opt-in:</span>
-                        <span className="font-semibold">
-                          "{revision.confirmationButtonText || "Send Me"}"
-                        </span>
-                      </div>
-                    )}
-
-                    <div>
-                      <span className="text-xs font-semibold text-foreground">
-                        Trigger:{" "}
-                      </span>
-                      {revision.matchMode === "any_comment" ? (
-                        <span className="text-xs text-primary font-medium">
-                          Any comment
-                        </span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {revision.keywords.map((k) => (
-                            <span
-                              key={k}
-                              className="text-[11px] px-1.5 py-0.5 bg-muted text-foreground rounded border border-border"
-                            >
-                              {k}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-2.5 bg-background rounded border border-border text-xs text-foreground">
-                      <p className="line-clamp-3">{revision.replyTemplate}</p>
-                      {revision.resourceUrl && (
-                        <p className="text-primary text-[11px] mt-1 font-medium underline truncate">
-                          {revision.resourceUrl}
-                        </p>
-                      )}
-                    </div>
+              {/* Pagination controls when items > 8 */}
+              {totalCampaigns > PAGE_SIZE && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 px-1 text-xs text-muted-foreground">
+                  <div>
+                    Showing{" "}
+                    <span className="font-semibold text-foreground">
+                      {(currentPage - 1) * PAGE_SIZE + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-semibold text-foreground">
+                      {Math.min(currentPage * PAGE_SIZE, totalCampaigns)}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-foreground">
+                      {totalCampaigns}
+                    </span>{" "}
+                    campaigns
                   </div>
-
-                  <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-muted-foreground font-mono">
-                      Updated{" "}
-                      {new Date(campaign.updatedAt).toLocaleDateString()}
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Previous
+                    </Button>
+                    <span className="px-2 text-xs font-medium text-foreground">
+                      Page {currentPage} of {totalPages}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          toggleStatusMutation.mutate({
-                            campaignId: campaign.id,
-                            status:
-                              campaign.status === "published"
-                                ? "paused"
-                                : "published",
-                          })
-                        }
-                        disabled={toggleStatusMutation.isPending}
-                        className="text-xs h-7 px-2.5"
-                      >
-                        {campaign.status === "published" ? "Pause" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/campaigns/${campaign.id}/edit`)
-                        }
-                        className="text-xs h-7 px-2.5"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setConfirmDeleteId(campaign.id)}
-                        className="text-xs h-7 px-2.5 text-destructive hover:bg-destructive/10"
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className="h-8 px-3 text-xs"
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
-
-      {/* Delete Campaign Confirmation Modal */}
-      <ConfirmDialog
-        isOpen={confirmDeleteId !== null}
-        title="Delete Campaign?"
-        description="Are you sure you want to delete this automation campaign? Automated comment replies for this post will stop immediately and cannot be undone."
-        confirmText="Delete Campaign"
-        cancelText="Cancel"
-        isDestructive={true}
-        isLoading={deleteMutation.isPending}
-        onConfirm={() => {
-          if (confirmDeleteId) {
-            deleteMutation.mutate(confirmDeleteId);
-          }
-        }}
-        onCancel={() => setConfirmDeleteId(null)}
-      />
     </DashboardLayout>
   );
 }

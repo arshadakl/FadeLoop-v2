@@ -13,7 +13,9 @@ export default function DeliveriesPage() {
   const deliveries = deliveriesQuery.data?.deliveries ?? [];
   const totalSent = deliveries.filter((d) => d.status === "sent").length;
   const totalFailed = deliveries.filter((d) => d.status === "failed").length;
-  const totalRetryable = deliveries.filter((d) => d.status === "retryable").length;
+  const totalRetryable = deliveries.filter(
+    (d) => d.status === "retryable",
+  ).length;
   const successRate =
     totalSent + totalFailed > 0
       ? Math.round((totalSent / (totalSent + totalFailed)) * 100)
@@ -49,6 +51,7 @@ export default function DeliveriesPage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
+              <title>Refresh</title>
               <polyline points="23 4 23 10 17 10" />
               <polyline points="1 20 1 14 7 14" />
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -88,9 +91,13 @@ export default function DeliveriesPage() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-2 h-2 rounded-full ${tile.dot}`} />
-                  <p className="text-xs text-muted-foreground font-medium">{tile.label}</p>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {tile.label}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-foreground tabular-nums">{tile.value}</p>
+                <p className="text-2xl font-bold text-foreground tabular-nums">
+                  {tile.value}
+                </p>
               </div>
             ))}
           </div>
@@ -118,13 +125,17 @@ export default function DeliveriesPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
+                  <title>Inbox</title>
                   <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
                   <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-base text-foreground">No deliveries yet</h3>
+              <h3 className="font-semibold text-base text-foreground">
+                No deliveries yet
+              </h3>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1.5">
-                When users comment on published campaigns, automated replies appear here.
+                When users comment on published campaigns, automated replies
+                appear here.
               </p>
             </div>
           ) : (
@@ -132,11 +143,21 @@ export default function DeliveriesPage() {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Status</th>
-                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Recipient</th>
-                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Provider ID</th>
-                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Attempts</th>
-                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Time</th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">
+                      Recipient
+                    </th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">
+                      Provider ID
+                    </th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">
+                      Attempts
+                    </th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">
+                      Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-foreground">
@@ -171,7 +192,9 @@ export default function DeliveriesPage() {
                               className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
                             >
                               @{d.recipient_username}
-                              <span className="text-[10px] text-muted-foreground">↗</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                ↗
+                              </span>
                             </a>
                           ) : (
                             <span
