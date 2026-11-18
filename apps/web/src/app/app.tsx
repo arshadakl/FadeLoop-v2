@@ -5,6 +5,7 @@ import { ProtectedRoute } from "../components/layout/protected-route";
 
 const FoundationPage = lazy(() => import("../pages/foundation-page"));
 const LoginPage = lazy(() => import("../pages/login-page"));
+const DashboardPage = lazy(() => import("../pages/dashboard-page"));
 const CampaignsPage = lazy(() => import("../pages/campaigns-page"));
 const EditCampaignPage = lazy(() => import("../pages/edit-campaign-page"));
 const AccountsPage = lazy(() => import("../pages/accounts-page"));
@@ -46,7 +47,15 @@ export function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <CampaignsPage />
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
                 </ProtectedRoute>
               }
             />

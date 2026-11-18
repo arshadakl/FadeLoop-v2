@@ -628,24 +628,31 @@ export function createCampaignStore(db: D1Database, observer?: QueryObserver) {
         attempt_count: number;
         occurred_at: number;
         recipient_username: string | null;
+        campaign_id: string | null;
       }>(
         "deliveries.list_workspace",
         cursorOccurredAt
           ? db
               .prepare(
-                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at, recipient_username
-                 FROM delivery_outcomes
-                 WHERE workspace_id = ? AND occurred_at < ?
-                 ORDER BY occurred_at DESC
+                `SELECT o.id, o.action_key, o.account_id, o.status, o.provider_message_id,
+                        o.error_code, o.attempt_count, o.occurred_at, o.recipient_username,
+                        dc.campaign_id
+                 FROM delivery_outcomes o
+                 LEFT JOIN delivery_claims dc ON dc.action_key = o.action_key
+                 WHERE o.workspace_id = ? AND o.occurred_at < ?
+                 ORDER BY o.occurred_at DESC
                  LIMIT ?`,
               )
               .bind(workspaceId, cursorOccurredAt, boundedLimit)
           : db
               .prepare(
-                `SELECT id, action_key, account_id, status, provider_message_id, error_code, attempt_count, occurred_at, recipient_username
-                 FROM delivery_outcomes
-                 WHERE workspace_id = ?
-                 ORDER BY occurred_at DESC
+                `SELECT o.id, o.action_key, o.account_id, o.status, o.provider_message_id,
+                        o.error_code, o.attempt_count, o.occurred_at, o.recipient_username,
+                        dc.campaign_id
+                 FROM delivery_outcomes o
+                 LEFT JOIN delivery_claims dc ON dc.action_key = o.action_key
+                 WHERE o.workspace_id = ?
+                 ORDER BY o.occurred_at DESC
                  LIMIT ?`,
               )
               .bind(workspaceId, boundedLimit),

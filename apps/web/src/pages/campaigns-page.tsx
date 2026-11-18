@@ -6,6 +6,7 @@ import {
   createCampaign,
   deleteCampaign,
   fetchCampaigns,
+  fetchDeliveries,
   toggleCampaignStatus,
 } from "../api/campaigns";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
@@ -132,6 +133,21 @@ export default function CampaignsPage() {
     queryKey: ["campaigns"],
     queryFn: ({ signal }) => fetchCampaigns(undefined, signal),
   });
+
+  const deliveriesQuery = useQuery({
+    queryKey: ["deliveries"],
+    queryFn: ({ signal }) => fetchDeliveries(undefined, signal),
+    staleTime: 60_000,
+  });
+
+  const campaignSentCounts = (deliveriesQuery.data?.deliveries ?? []).reduce<
+    Record<string, number>
+  >((acc, d) => {
+    if (d.campaign_id && d.status === "sent") {
+      acc[d.campaign_id] = (acc[d.campaign_id] || 0) + 1;
+    }
+    return acc;
+  }, {});
 
   const selectedMedia = mediaQuery.data?.media.find((m) => m.id === mediaId);
 
@@ -640,27 +656,6 @@ export default function CampaignsPage() {
                   </p>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="input-comment-reply"
-                    className="block text-xs font-medium text-foreground mb-1.5"
-                  >
-                    Public Comment Reply (Optional)
-                  </label>
-                  <input
-                    id="input-comment-reply"
-                    type="text"
-                    placeholder="e.g. Sent to your DM! Check your inbox 📩"
-                    value={commentReplyText}
-                    onChange={(e) => setCommentReplyText(e.target.value)}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                  />
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    Automatically posted as a public reply directly under the
-                    user's comment on Instagram.
-                  </p>
-                </div>
-
                 <div className="pt-2">
                   <Button
                     onClick={() => createMutation.mutate()}
@@ -784,9 +779,16 @@ export default function CampaignsPage() {
                       >
                         {campaign.status}
                       </span>
-                      <span className="text-[11px] font-mono text-muted-foreground">
-                        Account: {campaign.accountId}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {(campaignSentCounts[campaign.id] ?? 0) > 0 && (
+                          <span className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded font-semibold border border-primary/20">
+                            {campaignSentCounts[campaign.id]} sent
+                          </span>
+                        )}
+                        <span className="text-[11px] font-mono text-muted-foreground">
+                          {campaign.accountId.slice(0, 8)}…
+                        </span>
+                      </div>
                     </div>
 
                     {/* Rich Post Preview */}

@@ -6,7 +6,7 @@ export default function LoginPage() {
   const { session } = useOwner();
 
   if (session.data) {
-    return <Navigate to="/campaigns" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

@@ -43,6 +43,7 @@ export interface DeliveryOutcomeData {
   attempt_count: number;
   occurred_at: number;
   recipient_username?: string | null;
+  campaign_id?: string | null;
 }
 
 export interface DeliveriesResponse {
