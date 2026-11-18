@@ -13,9 +13,7 @@ export default function DeliveriesPage() {
   const deliveries = deliveriesQuery.data?.deliveries ?? [];
   const totalSent = deliveries.filter((d) => d.status === "sent").length;
   const totalFailed = deliveries.filter((d) => d.status === "failed").length;
-  const totalRetryable = deliveries.filter(
-    (d) => d.status === "retryable",
-  ).length;
+  const totalRetryable = deliveries.filter((d) => d.status === "retryable").length;
   const successRate =
     totalSent + totalFailed > 0
       ? Math.round((totalSent / (totalSent + totalFailed)) * 100)
@@ -23,16 +21,15 @@ export default function DeliveriesPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 font-sans">
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Delivery Logs
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Real-time audit log of automated private replies to Instagram
-              comments.
+              Real-time audit of automated private replies
             </p>
           </div>
 
@@ -41,7 +38,7 @@ export default function DeliveriesPage() {
             size="sm"
             onClick={() => void deliveriesQuery.refetch()}
             disabled={deliveriesQuery.isFetching}
-            className="flex items-center gap-1.5 self-start text-xs"
+            className="flex items-center gap-1.5 self-start rounded-xl text-xs"
           >
             <svg
               className={`w-3.5 h-3.5 ${deliveriesQuery.isFetching ? "animate-spin" : ""}`}
@@ -60,40 +57,47 @@ export default function DeliveriesPage() {
           </Button>
         </div>
 
-        {/* Aggregate stats */}
+        {/* Stat tiles */}
         {!deliveriesQuery.isPending && deliveries.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-card border border-border rounded-lg px-4 py-3">
-              <p className="text-xl font-bold text-foreground tabular-nums">
-                {totalSent}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">Sent</p>
-            </div>
-            <div className="bg-card border border-border rounded-lg px-4 py-3">
-              <p className="text-xl font-bold text-foreground tabular-nums">
-                {totalFailed}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">Failed</p>
-            </div>
-            <div className="bg-card border border-border rounded-lg px-4 py-3">
-              <p className="text-xl font-bold text-foreground tabular-nums">
-                {totalRetryable}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">Retrying</p>
-            </div>
-            <div className="bg-card border border-border rounded-lg px-4 py-3">
-              <p className="text-xl font-bold text-foreground tabular-nums">
-                {successRate !== null ? `${successRate}%` : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Success rate
-              </p>
-            </div>
+            {[
+              {
+                label: "Sent",
+                value: totalSent,
+                dot: "bg-success",
+              },
+              {
+                label: "Failed",
+                value: totalFailed,
+                dot: "bg-destructive",
+              },
+              {
+                label: "Retrying",
+                value: totalRetryable,
+                dot: "bg-warning",
+              },
+              {
+                label: "Success rate",
+                value: successRate !== null ? `${successRate}%` : "—",
+                dot: "bg-primary",
+              },
+            ].map((tile) => (
+              <div
+                key={tile.label}
+                className="bg-card border border-border rounded-2xl px-5 py-4"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${tile.dot}`} />
+                  <p className="text-xs text-muted-foreground font-medium">{tile.label}</p>
+                </div>
+                <p className="text-2xl font-bold text-foreground tabular-nums">{tile.value}</p>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Audit Log Table */}
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
           {deliveriesQuery.isPending ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
               Loading delivery activity…
@@ -104,13 +108,13 @@ export default function DeliveriesPage() {
             </div>
           ) : deliveries.length === 0 ? (
             <div className="p-16 text-center">
-              <div className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-5 h-5"
+                  className="w-6 h-6"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="1.75"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
@@ -118,61 +122,56 @@ export default function DeliveriesPage() {
                   <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-base text-foreground">
-                No Deliveries Recorded Yet
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1">
-                When users comment matching keywords on your published
-                campaigns, automated replies will appear here.
+              <h3 className="font-semibold text-base text-foreground">No deliveries yet</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1.5">
+                When users comment on published campaigns, automated replies appear here.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-muted/40 text-muted-foreground font-medium">
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Recipient</th>
-                    <th className="py-3 px-4">Provider Msg ID</th>
-                    <th className="py-3 px-4">Attempts</th>
-                    <th className="py-3 px-4">Time</th>
+                  <tr className="border-b border-border">
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Status</th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Recipient</th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Provider ID</th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Attempts</th>
+                    <th className="py-3.5 px-5 text-xs font-semibold text-muted-foreground">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-foreground">
                   {deliveries.map((d) => {
-                    const statusBadgeClass =
+                    const statusClass =
                       d.status === "sent"
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        ? "bg-success/10 text-success"
                         : d.status === "retryable"
-                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          ? "bg-warning/10 text-warning"
                           : d.status === "failed"
-                            ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : "bg-muted text-muted-foreground border-border";
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-muted text-muted-foreground";
 
                     return (
                       <tr
                         key={d.id}
                         className="hover:bg-muted/30 transition-colors"
                       >
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded font-medium border text-[11px] ${statusBadgeClass}`}
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full font-semibold text-[11px] ${statusClass}`}
                           >
                             {d.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-5">
                           {d.recipient_username ? (
                             <a
                               href={`https://instagram.com/${d.recipient_username}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-primary hover:underline text-xs"
+                              className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
                             >
                               @{d.recipient_username}
-                              <span className="text-[10px] text-muted-foreground">
-                                ↗
-                              </span>
+                              <span className="text-[10px] text-muted-foreground">↗</span>
                             </a>
                           ) : (
                             <span
@@ -184,11 +183,11 @@ export default function DeliveriesPage() {
                                 : d.action_key}
                             </span>
                           )}
-                          <div className="text-[10px] text-muted-foreground mt-0.5">
-                            Acct: {d.account_id.slice(0, 10)}…
+                          <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                            {d.account_id.slice(0, 10)}…
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-mono text-[11px]">
+                        <td className="py-3.5 px-5 font-mono text-[11px]">
                           {d.provider_message_id ? (
                             <span
                               className="text-primary font-medium cursor-help"
@@ -211,10 +210,10 @@ export default function DeliveriesPage() {
                             <span className="text-muted-foreground">—</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground tabular-nums">
+                        <td className="py-3.5 px-5 text-muted-foreground tabular-nums">
                           {d.attempt_count}
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground">
+                        <td className="py-3.5 px-5 text-muted-foreground">
                           {new Date(d.occurred_at).toLocaleString(undefined, {
                             month: "short",
                             day: "numeric",
