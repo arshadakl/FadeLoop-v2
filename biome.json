@@ -5,6 +5,7 @@
       "**",
       "!**/dist",
       "!**/.wrangler",
+      "!**/.gemini",
       "!pnpm-lock.yaml",
       "!**/*.md"
     ]

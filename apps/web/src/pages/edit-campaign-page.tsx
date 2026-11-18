@@ -220,16 +220,16 @@ export default function EditCampaignPage() {
 
         {/* Target Post Preview Card */}
         <div className="p-5 rounded-xl border border-border bg-card shadow-2xs space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>Target Instagram Post</span>
             {matchedMedia?.permalink && (
               <a
                 href={matchedMedia.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium inline-flex items-center gap-1 normal-case tracking-normal"
+                className="text-primary hover:underline font-medium inline-flex items-center gap-1"
               >
-                View on Instagram ↗
+                View on Instagram
               </a>
             )}
           </div>
@@ -245,13 +245,12 @@ export default function EditCampaignPage() {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-xs text-muted-foreground p-2 text-center bg-muted/60">
-                  <span className="font-bold">IG</span>
-                  <span className="text-[10px] mt-0.5">Media</span>
+                  <span className="font-semibold text-[10px]">Media</span>
                 </div>
               )}
               {matchedMedia?.media_type === "VIDEO" && (
                 <span className="absolute bottom-1 right-1 bg-black/85 text-[9px] font-bold text-white px-1.5 py-0.5 rounded">
-                  ▶ Reel
+                  Reel
                 </span>
               )}
             </div>
@@ -263,7 +262,7 @@ export default function EditCampaignPage() {
                   "No caption provided on this Instagram post."}
               </p>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-mono">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 <span>
                   Media ID:{" "}
                   <strong className="text-foreground">{mediaId}</strong>
@@ -297,8 +296,8 @@ export default function EditCampaignPage() {
           <div className="lg:col-span-3 space-y-6">
             {/* Card 1: Trigger Matching */}
             <div className="p-5 bg-card border border-border rounded-xl space-y-4 shadow-2xs">
-              <h2 className="text-sm font-semibold font-heading text-foreground uppercase tracking-wider">
-                1. Comment Trigger Rule
+              <h2 className="text-sm font-semibold font-heading text-foreground">
+                Comment trigger rule
               </h2>
 
               <div className="flex gap-4">
@@ -351,10 +350,10 @@ export default function EditCampaignPage() {
             {/* Card 2: 2-Step Interactive Opt-in ("Send Me" button) */}
             <div className="p-5 bg-card border border-border rounded-xl space-y-4 shadow-2xs">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold font-heading text-foreground uppercase tracking-wider">
-                  2. Interactive Opt-in Flow
+                <h2 className="text-sm font-semibold font-heading text-foreground">
+                  Interactive opt-in flow
                 </h2>
-                <span className="text-[10px] uppercase font-bold text-primary bg-primary/15 border border-primary/25 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-semibold text-primary bg-primary/15 border border-primary/25 px-2 py-0.5 rounded-full">
                   Recommended
                 </span>
               </div>
@@ -370,7 +369,7 @@ export default function EditCampaignPage() {
                 />
                 <div>
                   <span className="block text-xs font-semibold text-foreground">
-                    Enable 2-Step "Send Me" Quick Reply Button
+                    Enable 2-Step “Send Me” quick reply button
                   </span>
                   <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Sends an interactive button first. When tapped by the user,
@@ -416,7 +415,7 @@ export default function EditCampaignPage() {
                         setConfirmationPromptText(e.target.value)
                       }
                       className="w-full bg-background border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                      placeholder="Tap below to receive your link 👇"
+                      placeholder="Tap below to receive your link."
                     />
                   </div>
                 </div>
@@ -425,8 +424,8 @@ export default function EditCampaignPage() {
 
             {/* Card 3: Direct Message Content */}
             <div className="p-5 bg-card border border-border rounded-xl space-y-4 shadow-2xs">
-              <h2 className="text-sm font-semibold font-heading text-foreground uppercase tracking-wider">
-                3. Private DM Delivery Payload
+              <h2 className="text-sm font-semibold font-heading text-foreground">
+                Direct message payload
               </h2>
 
               <div>
@@ -465,8 +464,8 @@ export default function EditCampaignPage() {
 
             {/* Card 4: Public Comment Reply */}
             <div className="p-5 bg-card border border-border rounded-xl space-y-3 shadow-2xs">
-              <h2 className="text-sm font-semibold font-heading text-foreground uppercase tracking-wider">
-                4. Public Comment Reply (Optional)
+              <h2 className="text-sm font-semibold font-heading text-foreground">
+                Public comment reply (Optional)
               </h2>
 
               <div>
@@ -479,13 +478,13 @@ export default function EditCampaignPage() {
                 <input
                   id="input-edit-comment-reply"
                   type="text"
-                  placeholder="e.g. Sent to your DM! Check your inbox 📩"
+                  placeholder="e.g. Sent to your DM, check your inbox."
                   value={commentReplyText}
                   onChange={(e) => setCommentReplyText(e.target.value)}
                   className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1.5">
-                  Automatically posted under the commenter's comment on
+                  Automatically posted under the commenter’s comment on
                   Instagram to confirm the DM was sent.
                 </p>
               </div>
@@ -518,14 +517,14 @@ export default function EditCampaignPage() {
           {/* Live Simulator (2 Cols Sticky) */}
           <div className="lg:col-span-2">
             <div className="sticky top-6 flex flex-col justify-center items-center p-6 bg-card rounded-xl border border-border shadow-2xs">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-4">
-                Live DM Simulator Preview
+              <span className="text-xs font-semibold text-muted-foreground mb-4">
+                Direct message preview
               </span>
 
               <div className="w-full max-w-xs rounded-xl bg-background border border-border p-4 shadow-sm space-y-3">
                 <div className="flex items-center gap-2 pb-2.5 border-b border-border">
                   <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
-                    IG
+                    ig
                   </div>
                   <span className="text-xs font-semibold text-foreground">
                     Your Instagram Page
@@ -537,7 +536,7 @@ export default function EditCampaignPage() {
                     <div className="bg-muted rounded-lg p-2.5 text-xs text-foreground">
                       <p>
                         {confirmationPromptText ||
-                          "Tap below to receive your link 👇"}
+                          "Tap below to receive your link."}
                       </p>
                     </div>
                     <div className="flex justify-end">
@@ -568,7 +567,7 @@ export default function EditCampaignPage() {
                   </div>
                 )}
 
-                <span className="text-[10px] text-muted-foreground block text-right font-mono">
+                <span className="text-[10px] text-muted-foreground block text-right">
                   Delivered instantly · Just now
                 </span>
               </div>
@@ -580,8 +579,8 @@ export default function EditCampaignPage() {
         <div className="pt-8 border-t border-border">
           <div className="p-5 rounded-xl border border-destructive/20 bg-destructive/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-semibold font-heading text-destructive uppercase tracking-wider">
-                Danger Zone: Delete Campaign
+              <h3 className="text-sm font-semibold font-heading text-destructive">
+                Danger zone: delete campaign
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Permanently stop this automation and delete its configuration.

@@ -20,9 +20,9 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-2xs hover:border-muted-foreground/30 transition-all flex flex-col justify-between">
+    <div className="bg-card border border-border rounded-xl p-5 shadow-2xs hover:border-muted-foreground/30 transition-colors flex flex-col justify-between">
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+        <span className="text-xs font-semibold text-muted-foreground">
           {title}
         </span>
         <div className="w-8 h-8 rounded-lg bg-muted/60 text-muted-foreground flex items-center justify-center shrink-0">
@@ -272,7 +272,7 @@ export default function DashboardPage() {
               to="/campaigns"
               className="text-xs text-primary hover:underline font-semibold transition-colors"
             >
-              Manage all →
+              Manage all
             </Link>
           </div>
 
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                     to="/campaigns"
                     className="text-primary hover:underline font-medium"
                   >
-                    Create one →
+                    Create campaign
                   </Link>
                 </p>
               </div>
@@ -360,7 +360,7 @@ export default function DashboardPage() {
               to="/deliveries"
               className="text-xs text-primary hover:underline font-semibold transition-colors"
             >
-              All logs →
+              View all logs
             </Link>
           </div>
 
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider shrink-0 ${
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-semibold capitalize shrink-0 ${
                       d.status === "sent"
                         ? "bg-primary/15 text-primary border border-primary/25"
                         : d.status === "failed"

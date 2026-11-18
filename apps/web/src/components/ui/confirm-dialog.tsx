@@ -50,7 +50,7 @@ export function ConfirmDialog({
       {/* Accessible Backdrop */}
       <button
         type="button"
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs cursor-default w-full h-full border-none"
+        className="fixed inset-0 bg-black/60 cursor-default w-full h-full border-none"
         onClick={onCancel}
         tabIndex={-1}
         aria-label="Close dialog"
@@ -58,7 +58,7 @@ export function ConfirmDialog({
 
       {/* Dialog card */}
       <div
-        className="w-full max-w-md bg-card text-card-foreground border border-border rounded-lg shadow-xl p-6 space-y-4 relative z-10 animate-in zoom-in-95 duration-150 focus:outline-hidden"
+        className="w-full max-w-md bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 space-y-4 relative z-10 animate-in zoom-in-95 duration-150 focus:outline-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
@@ -71,7 +71,25 @@ export function ConfirmDialog({
             className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2"
           >
             {isDestructive && (
-              <span className="text-destructive text-base">⚠️</span>
+              <span
+                className="text-destructive inline-flex items-center shrink-0"
+                aria-hidden="true"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <title>Warning</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </span>
             )}
             <span>{title}</span>
           </h3>

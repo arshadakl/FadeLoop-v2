@@ -36,6 +36,7 @@ Thumbs.db
 Desktop.ini
 
 # Local editor configuration
+.gemini/
 .idea/
 .vscode/*
 !.vscode/extensions.json

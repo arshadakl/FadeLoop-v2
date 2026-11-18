@@ -57,16 +57,16 @@ function CampaignRow({
               src={item.thumbnail_url || item.media_url}
               alt={item.caption || "Post thumbnail"}
               className="w-full h-full object-cover"
-              loading="lazy"
+              decoding="async"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-muted-foreground uppercase bg-muted/60">
-              IG
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-semibold text-muted-foreground bg-muted/60">
+              Media
             </div>
           )}
           {item?.media_type === "VIDEO" && (
             <span className="absolute bottom-0.5 right-0.5 bg-black/85 text-[8px] font-bold text-white px-1 rounded">
-              ▶
+              Reel
             </span>
           )}
         </div>
@@ -90,7 +90,7 @@ function CampaignRow({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               ID: {campaign.mediaId.slice(0, 10)}…
             </span>
             <span className="text-muted-foreground/30">•</span>
@@ -113,7 +113,7 @@ function CampaignRow({
 
             {revision.confirmationButtonEnabled && (
               <span className="text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
-                ⚡ 2-Step ({revision.confirmationButtonText || "Send Me"})
+                2-step: {revision.confirmationButtonText || "Send Me"}
               </span>
             )}
           </div>
@@ -373,15 +373,15 @@ export default function CampaignsPage() {
                 <div>
                   <label
                     htmlFor="select-account"
-                    className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5"
+                    className="block text-xs font-semibold text-muted-foreground mb-1.5"
                   >
-                    Connected Instagram Account
+                    Connected Instagram account
                   </label>
                   <select
                     id="select-account"
                     value={selectedAccountId}
                     onChange={(e) => setSelectedAccountId(e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     {accounts.length === 0 ? (
                       <option value="">No accounts connected</option>
@@ -399,9 +399,9 @@ export default function CampaignsPage() {
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="input-media-id"
-                      className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                      className="block text-xs font-semibold text-muted-foreground"
                     >
-                      Target Post or Reel
+                      Target post or reel
                     </label>
                     <button
                       type="button"
@@ -409,8 +409,8 @@ export default function CampaignsPage() {
                       className="text-xs text-primary hover:underline font-medium"
                     >
                       {isManualMediaInput
-                        ? "← Select from Media"
-                        : "Enter Media ID manually"}
+                        ? "Select from media"
+                        : "Enter media ID manually"}
                     </button>
                   </div>
 
@@ -439,10 +439,10 @@ export default function CampaignsPage() {
                                 key={item.id}
                                 type="button"
                                 onClick={() => setMediaId(item.id)}
-                                className={`group relative rounded-md border text-left overflow-hidden flex flex-col transition-all p-1.5 ${
+                                className={`group relative rounded-md border text-left overflow-hidden flex flex-col transition-colors p-1.5 ${
                                   isSelected
                                     ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary"
-                                    : "border-border bg-card hover:border-muted-foreground"
+                                    : "border-border bg-background hover:border-muted-foreground"
                                 }`}
                               >
                                 <div className="relative aspect-square w-full rounded overflow-hidden bg-muted mb-1.5">
@@ -455,12 +455,12 @@ export default function CampaignsPage() {
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-                                      IG
+                                      Post
                                     </div>
                                   )}
                                   {item.media_type === "VIDEO" && (
                                     <span className="absolute bottom-1 right-1 bg-black/80 text-[9px] font-bold text-white px-1 rounded">
-                                      ▶ Reel
+                                      Reel
                                     </span>
                                   )}
                                 </div>
@@ -488,7 +488,7 @@ export default function CampaignsPage() {
                               rel="noopener noreferrer"
                               className="text-primary hover:underline text-[11px] ml-2 shrink-0 font-medium"
                             >
-                              View ↗
+                              View
                             </a>
                           )}
                         </div>
@@ -502,7 +502,7 @@ export default function CampaignsPage() {
                         placeholder="e.g. 17912345678901234"
                         value={mediaId}
                         onChange={(e) => setMediaId(e.target.value)}
-                        className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                       />
                       <p className="text-[11px] text-muted-foreground mt-1">
                         Find the Media ID via Meta Graph API or your Instagram
@@ -513,8 +513,8 @@ export default function CampaignsPage() {
                 </div>
 
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Trigger Mode
+                  <span className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    Trigger mode
                   </span>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
@@ -600,7 +600,7 @@ export default function CampaignsPage() {
                           onChange={(e) =>
                             setConfirmationButtonText(e.target.value)
                           }
-                          className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                          className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
                           placeholder="Send Me"
                         />
                       </div>
@@ -618,8 +618,8 @@ export default function CampaignsPage() {
                           onChange={(e) =>
                             setConfirmationPromptText(e.target.value)
                           }
-                          className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
-                          placeholder="Tap below to receive your link 👇"
+                          className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                          placeholder="Tap below to receive your link."
                         />
                       </div>
                     </div>
@@ -638,7 +638,7 @@ export default function CampaignsPage() {
                     rows={3}
                     value={replyTemplate}
                     onChange={(e) => setReplyTemplate(e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
                   />
                 </div>
 
@@ -655,7 +655,7 @@ export default function CampaignsPage() {
                     placeholder="https://yourbrand.com/resource"
                     value={resourceUrl}
                     onChange={(e) => setResourceUrl(e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
 
@@ -669,14 +669,14 @@ export default function CampaignsPage() {
                   <input
                     id="input-comment-reply"
                     type="text"
-                    placeholder="e.g. Sent to your DM! Check your inbox 📩"
+                    placeholder="e.g. Sent to your DM, check your inbox."
                     value={commentReplyText}
                     onChange={(e) => setCommentReplyText(e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">
                     Automatically posted as a public reply directly under the
-                    user's comment on Instagram.
+                    user’s comment on Instagram.
                   </p>
                 </div>
 
@@ -701,14 +701,14 @@ export default function CampaignsPage() {
 
               {/* Live Preview Simulator */}
               <div className="flex flex-col justify-center items-center p-6 bg-muted/30 rounded-xl border border-border">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-4">
-                  Instagram Direct Message Simulation
+                <span className="text-xs font-semibold text-muted-foreground mb-4">
+                  Direct message preview
                 </span>
 
-                <div className="w-full max-w-xs rounded-xl bg-card border border-border p-4 shadow-sm space-y-3">
+                <div className="w-full max-w-xs rounded-xl bg-background border border-border p-4 shadow-xs space-y-3">
                   <div className="flex items-center gap-2 pb-2 border-b border-border">
                     <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
-                      IG
+                      ig
                     </div>
                     <span className="text-xs font-semibold text-foreground">
                       Your Connected Account
@@ -720,7 +720,7 @@ export default function CampaignsPage() {
                       <div className="bg-muted rounded-lg p-2.5 text-xs text-foreground">
                         <p>
                           {confirmationPromptText ||
-                            "Tap below to receive your link 👇"}
+                            "Tap below to receive your link."}
                         </p>
                       </div>
                       <div className="flex justify-end">
@@ -751,7 +751,7 @@ export default function CampaignsPage() {
                     </div>
                   )}
 
-                  <span className="text-[10px] text-muted-foreground block text-right font-mono">
+                  <span className="text-[10px] text-muted-foreground block text-right">
                     Delivered instantly · Just now
                   </span>
                 </div>

@@ -163,7 +163,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Logo */}
         <div className="h-[64px] flex items-center px-4 border-b border-sidebar-border shrink-0">
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm transition-transform motion-safe:group-hover:scale-105">
               <svg
                 viewBox="0 0 20 20"
                 fill="none"
@@ -177,8 +177,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <p className="text-base font-bold text-foreground tracking-tight font-heading">
                 FadeLoop
               </p>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                Studio
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Automations
               </p>
             </div>
           </Link>
@@ -186,8 +186,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-5 overflow-y-auto">
-          <p className="text-[10px] uppercase font-semibold text-muted-foreground/70 px-3 mb-2 tracking-widest">
-            Menu
+          <p className="text-[11px] font-semibold text-muted-foreground/70 px-3 mb-2">
+            Navigation
           </p>
           <div className="space-y-0.5">
             {navItems.map((item) => {
@@ -199,7 +199,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150",
                     active
                       ? "bg-primary/15 text-primary font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
@@ -324,7 +324,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Floating Bottom Navigation Snack Bar */}
       <nav
         aria-label="Mobile navigation"
-        className="fixed bottom-3 inset-x-3 sm:inset-x-6 max-w-md mx-auto z-40 lg:hidden bg-card/95 backdrop-blur-md border border-border/90 shadow-xl rounded-2xl px-2 py-1.5 flex items-center justify-around"
+        className="fixed bottom-3 inset-x-3 sm:inset-x-6 max-w-md mx-auto z-40 lg:hidden bg-card/95 backdrop-blur-md border border-border shadow-md rounded-2xl px-2 py-1.5 flex items-center justify-around"
       >
         {navItems.map((item) => {
           const active = item.exact
@@ -335,7 +335,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl text-[10px] font-medium transition-all duration-150 gap-0.5",
+                "flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl text-[10px] font-medium transition-colors duration-150 gap-0.5",
                 active
                   ? "text-primary font-semibold"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/30",

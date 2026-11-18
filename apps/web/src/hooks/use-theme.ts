@@ -19,8 +19,10 @@ export function useTheme() {
       const isDark = theme === "dark" || (theme === "system" && media.matches);
       if (isDark) {
         root.classList.add("dark");
+        root.setAttribute("data-theme", "dark");
       } else {
         root.classList.remove("dark");
+        root.setAttribute("data-theme", "light");
       }
     }
 

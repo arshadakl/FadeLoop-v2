@@ -101,7 +101,7 @@ function AccountItem({
               <span
                 className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
                   acc.status === "connected" && !isExpired
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    ? "bg-success/15 text-success border border-success/30"
                     : "bg-destructive/10 text-destructive border border-destructive/20"
                 }`}
               >
@@ -114,15 +114,43 @@ function AccountItem({
                 </span>
               ) : isSubscribed ? (
                 <span
-                  className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-medium shrink-0"
+                  className="text-xs px-2 py-0.5 rounded bg-success/15 text-success border border-success/30 flex items-center gap-1.5 font-medium shrink-0"
                   title={`Subscribed fields: ${webhookQuery.data?.subscribedFields.join(", ")}`}
                 >
-                  <span>⚡</span>
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <title>Active</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
                   <span>Webhooks Active</span>
                 </span>
               ) : (
-                <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 font-medium shrink-0">
-                  <span>⚠️</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30 flex items-center gap-1.5 font-medium shrink-0">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <title>Warning</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
                   <span>Webhook Not Subscribed</span>
                 </span>
               )}
@@ -179,7 +207,7 @@ function AccountItem({
         <div
           className={`text-xs px-3 py-1.5 rounded border ${
             actionMessage.startsWith("✓")
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+              ? "bg-success/15 border-success/30 text-success"
               : "bg-destructive/10 border-destructive/20 text-destructive"
           }`}
         >
@@ -250,10 +278,10 @@ export default function AccountsPage() {
 
         {/* Notifications */}
         {isConnectedNotice && (
-          <div className="p-3.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-center justify-between">
+          <div className="p-3.5 rounded bg-success/15 border border-success/30 text-success text-sm flex items-center justify-between">
             <span>
-              ✓ Instagram account connected successfully! Webhooks subscribed
-              and 60-day token sealed at rest.
+              Instagram account connected successfully. Webhooks subscribed and
+              60-day token sealed at rest.
             </span>
           </div>
         )}
@@ -316,7 +344,26 @@ export default function AccountsPage() {
         {/* Meta Webhook Requirement Guide */}
         <div className="p-4 rounded-lg bg-card border border-border space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-base">ℹ️</span>
+            <span
+              className="text-muted-foreground inline-flex items-center shrink-0"
+              aria-hidden="true"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <title>Information</title>
+                <circle cx="12" cy="12" r="10" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 16v-4m0-4h.01"
+                />
+              </svg>
+            </span>
             <h3 className="font-semibold text-sm text-foreground">
               Meta Webhook Configuration Requirement
             </h3>
@@ -336,7 +383,7 @@ export default function AccountsPage() {
                   subscribed_apps
                 </code>
                 ). FadeLoop automatically triggers this during connection, or
-                you can click <strong>⚡ Sync Webhooks</strong> above.
+                you can click <strong>Sync Webhooks</strong> above.
               </p>
             </div>
             <div className="p-3 rounded bg-muted/40 border border-border/60 space-y-1">

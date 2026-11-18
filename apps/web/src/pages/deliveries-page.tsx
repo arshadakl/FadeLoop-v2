@@ -210,10 +210,10 @@ export default function DeliveriesPage() {
                             {d.account_id.slice(0, 10)}…
                           </div>
                         </td>
-                        <td className="py-3.5 px-5 font-mono text-[11px]">
+                        <td className="py-3.5 px-5 text-[11px]">
                           {d.provider_message_id ? (
                             <span
-                              className="text-primary font-medium cursor-help"
+                              className="text-primary font-mono font-medium cursor-help"
                               title={d.provider_message_id}
                             >
                               {d.provider_message_id.length > 14
@@ -222,7 +222,7 @@ export default function DeliveriesPage() {
                             </span>
                           ) : d.error_code ? (
                             <span
-                              className="text-destructive font-semibold cursor-help"
+                              className="text-destructive font-mono font-semibold cursor-help"
                               title={d.error_code}
                             >
                               {d.error_code.length > 18
@@ -230,7 +230,9 @@ export default function DeliveriesPage() {
                                 : d.error_code}
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground font-sans">
+                              None
+                            </span>
                           )}
                         </td>
                         <td className="py-3.5 px-5 text-muted-foreground tabular-nums">
