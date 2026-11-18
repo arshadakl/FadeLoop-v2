@@ -8,8 +8,8 @@ This is the authoritative development tracker. Read it with the [architecture](.
 
 | Field | Current state |
 |---|---|
-| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Webhook Sync + Button Template + Dedicated Edit Page + Public Comment Reply Persistence Live |
-| Current phase | P00-P08-15 DONE; Step 2 + Public comment reply fully verified and persisted |
+| Product stage | P01-P08 Unified Worker deployed live to Cloudflare; Hallmark Anti-AI-Slop Design & Mobile Navigation Live |
+| Current phase | P00-P08 DONE; Sloplint 0 FAIL / 0 REFLEX / 0 WARN achieved across all pages |
 | Authentication decision | Supabase Auth email/password for owner session; adaptive local/prod HttpOnly cookies |
 | Application/runtime | Single unified worker (apps/server, fadeloop) serving assets, API, ingress, queue consumer, and cron |
 | Provider verification | Meta Webhook verified at /webhook with telemetry logging; 2-step Button Template & automatic subscribed_apps active |
@@ -17,11 +17,11 @@ This is the authoritative development tracker. Read it with the [architecture](.
 | Performance evidence | Metered D1 writes measured; active CPU sub-5ms; max batch size 1 with DLQ on Cloudflare Queues |
 | Tests/builds/deployment | pnpm check PASS, 93 tests across 22 test suites; deployed to https://fadeloop.arshadayanikkal.workers.dev |
 | Branch / remote | dev; https://github.com/arshadakl/FadeLoop-v2.git |
-| Active owner | Antigravity: Public Comment Reply Persistence in Route Handlers |
-| Immediate next action | Live test comment reply and update existing campaign |
+| Active owner | Antigravity: Hallmark Anti-Slop Audit & Mobile Navigation |
+| Immediate next action | Ready for production use and campaign creation |
 | Current blockers | None |
 | Secrets/resources | Stored in Cloudflare Worker secrets and local .env. Zero secrets exposed. |
-| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 142a60a9-61bb-4c96-9a18-01c08a8c37f5 |
+| Evidence | [Free-tier capacity model](../engineering/free-tier-capacity-model.md), live deployment version 3fcacf33-ded9-4544-93af-e065c56323fa |
 
 The ignored research report is local supporting material. Future contributors must be able to work from tracked documents without needing that file.
 
